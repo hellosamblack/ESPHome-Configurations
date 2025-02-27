@@ -1,6 +1,10 @@
 esphome:
   name: $device_name
   friendly_name: $friendly_name
+  area: $area
+  project:
+    name: $project_name
+    version: $project_version
 
 logger:
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
