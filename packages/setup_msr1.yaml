@@ -22,6 +22,7 @@ web_server:
   port: 80
 
 api:
+  id: api_id
   on_client_connected:
     - delay: 1s
     - light.turn_off: rgb_light
