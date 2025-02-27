@@ -7,18 +7,18 @@ CODEOWNERS = ["@limengdu"]
 DEPENDENCIES = ["uart"]
 MULTI_CONF = True
 
-mr60bha2_ns = cg.esphome_ns.namespace("sam_seeed_mr60bha2")
+sam_mr60bha2_ns = cg.esphome_ns.namespace("sam_seeed_mr60bha2")
 
-MR60BHA2Component = mr60bha2_ns.class_(
-    "MR60BHA2Component", cg.Component, uart.UARTDevice
+SAM_MR60BHA2Component = mr60bha2_ns.class_(
+    "SAM_MR60BHA2Component", cg.Component, uart.UARTDevice
 )
 
-CONF_MR60BHA2_ID = "mr60bha2_id"
+CONF_SAM_MR60BHA2_ID = "sam_mr60bha2_id"
 
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(MR60BHA2Component),
+            cv.GenerateID(): cv.declare_id(SAM_MR60BHA2Component),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)

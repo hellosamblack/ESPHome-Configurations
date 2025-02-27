@@ -22,7 +22,7 @@ static const uint16_t HEART_RATE_TYPE_BUFFER = 0x0A15;
 static const uint16_t DISTANCE_TYPE_BUFFER = 0x0A16;
 static const uint16_t PRINT_CLOUD_BUFFER = 0x0A04;
 
-class MR60BHA2Component : public Component,
+class SAM_MR60BHA2Component : public Component,
                           public uart::UARTDevice {  // The class name must be the name defined by text_sensor.py
 #ifdef USE_BINARY_SENSOR
   SUB_BINARY_SENSOR(has_target);
