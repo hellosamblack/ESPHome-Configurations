@@ -4,7 +4,7 @@ external_components:
       url: https://github.com/hellosamblack/esphome-configurations
       ref: main
     components: [ sam_seeed_mr60bha2 ]
-    refresh: 15min
+    refresh: 0min
 
 sam_seeed_mr60bha2:
 
