@@ -1,0 +1,147 @@
+esphome:
+  platformio_options:
+    board_upload.maximum_size: 4194304
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  flash_size: 4MB # upload.flash_size
+  framework:
+    type: esp-idf
+    version: latest
+
+logger:
+  id: !extend logger_id
+  hardware_uart: USB_SERIAL_JTAG
+
+wifi:
+  id: !extend wifi_id
+  enable_btm: True
+  enable_rrm: True
+  
+captive_portal:
+
+# For XIAO ESP32C6 Onboard LED
+# light:
+#   - platform: status_led
+#     name: "Switch state"
+#     pin: GPIO15
+
+i2c:
+  sda: GPIO22
+  scl: GPIO23
+  scan: true
+  id: bus_a
+
+uart:
+  id: uart_bus
+  baud_rate: 115200
+  rx_pin: 17
+  tx_pin: 16
+  parity: NONE
+  stop_bits: 1
+
+
+binary_sensor:
+
+    
+sensor:
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    unit_of_measurement: "dB"
+    update_interval: 60s
+    entity_category: "diagnostic"
+    internal: false
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "WiFi Signal Strength"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: signal_strength
+    state_class: measurement
+
+  - platform: uptime
+    name: Uptime
+    entity_category: "diagnostic"
+
+
+  - platform: debug
+    free:
+      name: "Heap Free"
+    block:
+      name: "Heap Max Block"
+    loop_time:
+      name: "Loop Time"
+
+text_sensor:
+  - platform: template
+    name: "Build Timestamp"
+    id: build_timestamp
+    lambda: |-
+      return {"2025-02-27T08:02:00Z"};
+
+  - platform: template
+    name: "ESPHome Project Version"
+    id: esphome_project_version_text_short
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+
+  - platform: template
+    name: "ESPHome Project Version Detailed"
+    id: esphome_project_version_text_detailed
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION " " + App.get_compilation_time() };
+
+  - platform: template
+    name: "ESPHome Project Name"
+    id: esphome_project_name
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_NAME };
+
+
+  - platform: version
+    name: "ESPHome Version"
+    id: esphome_version
+    entity_category: "diagnostic"
+    internal: False
+
+  - platform: copy
+    source_id: esphome_version
+    id: esphome_version_copy
+    name: "ESPHome Version Copy"
+    internal: False
+
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+      address_0:
+        name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+    bssid:
+      name: ESP Connected BSSID
+    mac_address:
+      name: ESP Mac Wifi Address
+    scan_results:
+      name: ESP Latest Scan Results
+    dns_address:
+      name: ESP DNS Address
+
+  - platform: debug
+    device:
+      name: "Device Info"
+    reset_reason:
+      name: "Reset Reason"

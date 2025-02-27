@@ -7,6 +7,7 @@ esphome:
     version: $project_version
 
 logger:
+  id: logger_id
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
   baud_rate: 0  # 0 Enables logging, but disables serial-port logging to free CPU and memory if set to zero
   #Otherwise 9600 seems to be common
@@ -30,6 +31,7 @@ ota:
 
 
 wifi:
+  id: wifi_id
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: $device_name
