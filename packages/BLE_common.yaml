@@ -1,35 +1,11 @@
-# esp32_ble_tracker:
-#   scan_parameters:
-#     interval: 1100ms
-#     window: 1100ms
-#     #duration: 60s
-#     #active: true
-#     #This is started and stopped in setup_common, since it should only run when connected to the native API
-#     #https://esphome.io/components/esp32_ble_tracker.html#use-on-single-core-chips
-#     continuous: true
-#   on_ble_advertise:
-#     then:
-#       - lambda: |-
-#           parseAdvertisement(x);
-
-
 #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
 esp32_ble_tracker:
   scan_parameters:
     # Don't auto start BLE scanning, we control it in the `api` block's automation.
     continuous: False
-    
     active: True  # send scan-request packets to gather more info, like device name for some devices.
-
     interval: 1000ms  # default 320ms - how long to spend on each advert channel
     window:   900ms  # default 30ms, try 300 - how long to actually "listen" in each interval. Reduce this if device is unstable.
     # If the device cannot keep up or becomes unstable, reduce the "window" setting. This may be
     # required if your device is controlling other sensors or doing PWM for lights etc.
-  #Removed, handled by Bermuda
-  #I added this so we still have local tracking
-  # on_ble_advertise:
-  #   then:
-  #     - lambda: |-
-  #         parseAdvertisement(x);
-bluetooth_proxy:
   active: true  # allows outbound connections from HA to devices.
