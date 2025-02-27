@@ -11,8 +11,9 @@ esp32:
     version: latest
 
 logger:
-  id: !extend logger_id
+  level: DEBUG
   hardware_uart: USB_SERIAL_JTAG
+  baud_rate: 0
 
 wifi:
   id: !extend wifi_id
