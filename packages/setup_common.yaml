@@ -19,7 +19,7 @@ logger:
 #  esp32_ble_tracker: VERY_VERBOSE
 
 api:
-  id: api_id
+  #id: api_id
   encryption:
     key: $api_encryption_key
 
