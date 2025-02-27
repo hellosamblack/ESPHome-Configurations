@@ -1,11 +1,6 @@
 esphome:
   name: $device_name
   friendly_name: $friendly_name
-  platformio_options:
-    framework: $esphome_platformio_options_framework
-    board_build.flash_mode: $esphome_platformio_options_board_build_flash_mode
-    board_build.mcu: $esphome_platformio_options_board_build_mcu
-
 
 logger:
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
@@ -21,24 +16,13 @@ logger:
 api:
   encryption:
     key: $api_encryption_key
-  #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
-  # Only enable BLE tracking when wifi is up and api is connected
-  # Gives single-core ESP32-C3 devices time to manage wifi and authenticate with api
-  on_client_connected:
-     - esp32_ble_tracker.start_scan:
-        continuous: true
-  # Disable BLE tracking when there are no api connections live
-  on_client_disconnected:
-    if:
-      condition:
-        not:
-          api.connected:
-      then:
-        - esp32_ble_tracker.stop_scan:
 
 ota:
   platform: esphome
   password: $ota_password
+
+#web_server:
+
 
 wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails

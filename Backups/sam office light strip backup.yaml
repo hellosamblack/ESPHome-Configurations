@@ -1,0 +1,102 @@
+substitutions:
+  name: sam-office-light-strip-esphome
+  friendly_name: Sam Office Light Strip ESPHome
+  #static_ip: 
+  api_encryption_key: m9bYE9pDwu1u1PWovMlHc1kdVBjjQtOL2DhCyYa3XcY=
+  #ota_password: 
+
+esphome:
+  name: $name
+  friendly_name: $friendly_name
+
+packages:
+  setup_common: github://hellosamblack/esphome-configurations/packages/setup_common.yaml@main
+  setup_common: github://hellosamblack/esphome-configurations/packages/setup_bk72xx.yaml@main
+  # ESPHome-Configurations: # name of package/project
+  #   url: https://github.com/hellosamblack/esphome-configurations/tree/main/packages
+  #   #ref: main
+  #   files: [setup_common.yaml]
+  #   refresh: 0min
+
+
+logger:
+
+web_server:
+
+captive_portal:
+
+mdns:
+
+api:
+  encryption:
+    key: $api_encryption_key
+
+ota:
+  platform: esphome
+  password: ""
+
+wifi:
+  networks:
+  - ssid: !secret wifi_office_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_bedroom_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_dining_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_entry_ssid
+    password: !secret wifi_password
+  ap:
+    ssid: $name
+    password: !secret wifi_password
+button:
+  - platform: restart
+    name: Restart
+
+debug:
+  update_interval: 30s
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: Reset Reason
+  - platform: libretiny
+    version:
+      name: LibreTiny Version
+
+sensor:
+  - platform: uptime
+    name: Uptime
+
+output:
+  - platform: libretiny_pwm
+    id: output_red
+    pin: P9
+  - platform: libretiny_pwm
+    id: output_green
+    pin: P24
+  - platform: libretiny_pwm
+    id: output_blue
+    pin: P26
+  - platform: libretiny_pwm
+    id: output_cold
+    pin: P6
+    frequency: 2000 Hz
+  - platform: libretiny_pwm
+    id: output_warm
+    pin: P8
+    frequency: 2000 Hz
+
+light:
+  - platform: rgbww
+    id: light_rgbww
+    name: Light
+    color_interlock: true
+    cold_white_color_temperature: 6500 K
+    warm_white_color_temperature: 4000 K
+    #warm_white_color_temperature: 2700 K
+    red: output_red
+    green: output_green
+    blue: output_blue
+    cold_white: output_cold
+    warm_white: output_warm
+    constant_brightness: true

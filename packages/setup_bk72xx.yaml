@@ -4,3 +4,10 @@ esphome:
 
 bk72xx:
   board: generic-bk7231t-qfn32-tuya
+
+web_server:
+
+text_sensor:
+  - platform: libretiny
+    version:
+      name: LibreTiny Version
