@@ -9,7 +9,7 @@ MULTI_CONF = True
 
 sam_mr60bha2_ns = cg.esphome_ns.namespace("sam_seeed_mr60bha2")
 
-SAM_MR60BHA2Component = mr60bha2_ns.class_(
+SAM_MR60BHA2Component = sam_mr60bha2_ns.class_(
     "SAM_MR60BHA2Component", cg.Component, uart.UARTDevice
 )
 
