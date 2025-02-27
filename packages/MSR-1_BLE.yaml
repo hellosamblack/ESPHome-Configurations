@@ -1,0 +1,48 @@
+esphome:
+  name: $device_name
+  friendly_name: $friendly_name
+  comment: Apollo Multisensor Mk1 (MSR-1)
+  name_add_mac_suffix: false
+  platformio_options:
+    board_build.flash_mode: dio
+
+  on_boot:
+  - priority: 900.0
+    then:
+      - lambda: |-
+          id(radar_bluetooth).turn_off();
+
+  project:
+    name: "ApolloAutomation.MSR-1"
+    version: "${version}"
+
+  min_version: 2024.6.4
+
+dashboard_import:
+  package_import_url: github://hellosamblack/MSR-1/Integrations/ESPHome/MSR-1_BLE.yaml
+  import_full_config: false
+
+ota:
+  - platform: esphome
+    password: "apolloautomation"
+
+logger:
+  #level: INFO
+  #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
+  baud_rate: 0  # 0 Enables logging, but disables serial-port logging to free CPU and memory
+
+wifi:
+  power_save_mode: none
+  ap:
+    ssid: "Apollo MSR1 Hotspot"
+
+bluetooth_proxy:
+  active: true
+
+packages:
+  remote_package:
+    url: https://github.com/hellosamblack/MSR-1/
+    ref: dev
+    files:
+      - Integrations/ESPHome/Core.yaml
+    refresh: 0d

@@ -1,0 +1,1138 @@
+substitutions:
+  name: $device_name
+  version:  "24.7.15.1"
+  device_description: ${name} made by Apollo Automation - version ${version}.
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+captive_portal:
+
+web_server:
+  port: 80
+
+api:
+  on_client_connected:
+    - delay: 1s
+    - light.turn_off: rgb_light
+    - lambda: 'id(cycleCounter) = 30;'
+    #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
+    # Only enable BLE tracking when wifi is up and api is connected
+    # Gives single-core ESP32-C3 devices time to manage wifi and authenticate with api
+    - esp32_ble_tracker.start_scan:
+        continuous: true
+  # Disable BLE tracking when there are no api connections live
+  on_client_disconnected:
+    if:
+      condition:
+        not:
+          api.connected:
+      then:
+        - esp32_ble_tracker.stop_scan:
+  services:
+    - service: play_buzzer
+      variables:
+        song_str: string
+      then:
+        - rtttl.play:
+            rtttl: !lambda 'return song_str;'
+
+    #Co2 Calibration Service
+    - service: calibrate_co2_value
+      variables:
+        co2_ppm: float
+      then:
+        - scd4x.perform_forced_calibration:
+            value: !lambda 'return co2_ppm;'
+            id: scd40
+
+    #Setting HLK Password
+    - service: set_ld2410_bluetooth_password
+      variables:
+        password: string
+      then:
+        - bluetooth_password.set:
+            id: ld2410_radar
+            password: !lambda 'return password;'
+
+globals:
+  - id: cycleCounter
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: button_press_timestamp
+    restore_value: no
+    type: uint32_t
+    initial_value: '0'
+
+i2c:
+  sda: GPIO1
+  scl: GPIO0
+  id: bus_a
+
+uart:
+  tx_pin: GPIO21
+  rx_pin: GPIO20
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+# Numbers For Configuration
+number:
+  - platform: ld2410
+    timeout:
+      name: Radar Timeout
+    max_move_distance_gate:
+      name: Radar Max Move Distance
+    max_still_distance_gate:
+      name: Radar Max Still Distance
+    g0:
+      move_threshold:
+        name: G0 Move Threshold
+        id: g0_move_threshold
+      still_threshold:
+        name: G0 Still Threshold
+        id: g0_still_threshold
+    g1:
+      move_threshold:
+        name: G1 Move Threshold
+        id: g1_move_threshold
+      still_threshold:
+        name: G1 Still Threshold
+        id: g1_still_threshold
+    g2:
+      move_threshold:
+        name: G2 Move Threshold
+        id: g2_move_threshold
+      still_threshold:
+        name: G2 Still Threshold
+        id: g2_still_threshold
+    g3:
+      move_threshold:
+        name: G3 Move Threshold
+        id: g3_move_threshold
+      still_threshold:
+        name: G3 Still Threshold
+        id: g3_still_threshold
+    g4:
+      move_threshold:
+        name: G4 Move Threshold
+        id: g4_move_threshold
+      still_threshold:
+        name: G4 Still Threshold
+        id: g4_still_threshold
+    g5:
+      move_threshold:
+        name: G5 Move Threshold
+        id: g5_move_threshold
+      still_threshold:
+        name: G5 Still Threshold
+        id: g5_still_threshold
+    g6:
+      move_threshold:
+        name: G6 Move Threshold
+        id: g6_move_threshold
+      still_threshold:
+        name: G6 Still Threshold
+        id: g6_still_threshold
+    g7:
+      move_threshold:
+        name: G7 Move Threshold
+        id: g7_move_threshold
+      still_threshold:
+        name: G7 Still Threshold
+        id: g7_still_threshold
+    g8:
+      move_threshold:
+        name: G8 Move Threshold
+        id: g8_move_threshold
+      still_threshold:
+        name: G8 Still Threshold
+        id: g8_still_threshold
+
+  - platform: template
+    name: BME280 Humidity Offset
+    id: bme280_humidity_offset
+    restore_value: true
+    initial_value: -18.86
+    min_value: -70.0
+    max_value: 70.0
+    entity_category: "CONFIG"
+    unit_of_measurement: "%"
+    optimistic: true
+    update_interval: never
+    step: 0.1
+    mode: box
+
+  - platform: template
+    name: BME280 Temperature Offset
+    id: bme280_temperature_offset
+    restore_value: true
+    initial_value: 14.54
+    min_value: -70.0
+    max_value: 70.0
+    entity_category: "CONFIG"
+    unit_of_measurement: "°C"
+    optimistic: true
+    update_interval: never
+    step: 0.1
+    mode: box
+# Setting start of zone 1 occupancy
+  - platform: template
+    name: "Radar Zone 1 Start"
+    id: radar_z1_start
+    device_class: distance
+    min_value: 0
+    max_value: 800
+    step: 1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    icon: "mdi:arrow-collapse-right"
+    entity_category: CONFIG
+    unit_of_measurement: "cm"
+
+  # Setting ending of zone 1 occupancy
+  - platform: template
+    name: "Radar End Zone 1"
+    id: radar_z1_end
+    device_class: distance
+    min_value: 0
+    max_value: 800
+    step: 1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 50
+    icon: "mdi:arrow-collapse-right"
+    entity_category: CONFIG
+    unit_of_measurement: "cm"
+
+  # Setting ending of zone 2 occupancy
+  - platform: template
+    name: "Radar End Zone 2"
+    id: radar_z2_end
+    device_class: distance
+    min_value: 0
+    max_value: 800
+    step: 1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 150
+    icon: "mdi:arrow-collapse-right"
+    entity_category: CONFIG
+    unit_of_measurement: "cm"
+
+  # Setting ending of zone 3 occupancy
+  - platform: template
+    name: "Radar End Zone 3"
+    id: radar_z3_end
+    device_class: distance
+    min_value: 0
+    max_value: 800
+    step: 1
+    mode: box
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    initial_value: 250
+    icon: "mdi:arrow-collapse-right"
+    entity_category: CONFIG
+    unit_of_measurement: "cm"
+
+# Buzzer
+output:
+  - platform: ledc
+    pin: GPIO10
+    id: buzzer
+rtttl:
+ output: buzzer
+
+
+
+binary_sensor:
+  - platform: status
+    name: Online
+    id: ink_ha_connected
+  - platform: ld2410
+    has_target:
+      name: Radar Target
+      id: radar_has_target
+    has_moving_target:
+      name: Radar Moving Target
+      id: radar_has_moving_target
+    has_still_target:
+      name: Radar Still Target
+      id: radar_has_still_target
+  ## Set Up Radar Zones Based On Distance
+  - platform: template
+    name: "Radar Zone 1 Occupancy"
+    id: radar_zone_1_occupancy
+    device_class: occupancy
+    icon: mdi:motion-sensor
+    lambda: |-
+      if ((id(radar_has_target).state) && ((id(radar_detection_distance).state < id(radar_z1_end).state) && (id(radar_detection_distance).state > id(radar_z1_start).state))){
+        return true;
+      } else {
+        return false;
+      }
+  - platform: template
+    name: "Radar Zone 2 Occupancy"
+    id: radar_zone_2_occupancy
+    device_class: occupancy
+    icon: mdi:motion-sensor
+    lambda: |-
+      if ((id(radar_has_target).state) && ((id(radar_z1_end).state < id(radar_detection_distance).state) && (id(radar_detection_distance).state < id(radar_z2_end).state))) {
+        return true;
+      } else {
+        return false;
+      }
+  - platform: template
+    name: "Radar Zone 3 Occupancy"
+    id: radar_zone_3_occupancy
+    device_class: occupancy
+    icon: mdi:motion-sensor
+    lambda: |-
+      if ((id(radar_has_target).state) && ((id(radar_z2_end).state < id(radar_detection_distance).state) && (id(radar_detection_distance).state < id(radar_z3_end).state))) {
+        return true;
+      } else {
+        return false;
+      }
+  - platform: gpio
+    pin: 
+      number: GPIO9
+      inverted: true
+      ignore_strapping_warning: true
+      mode:
+        input: true
+        pullup: true
+    id: reset_button
+    on_press:
+      then:
+        - lambda: |-
+            id(button_press_timestamp) = millis();
+            
+    on_release:
+      then:
+        - lambda: |-
+            if (millis() - id(button_press_timestamp) >= 5000) {
+              // Remove Wifi
+              id(factory_reset_switch).turn_on();
+              
+            }
+
+ld2410:
+  id: ld2410_radar
+
+sensor:
+
+  - platform: internal_temperature
+    name: "ESP Temperature"
+    id: sys_esp_temperature
+
+
+  - platform: uptime
+    name: Uptime
+    id: sys_uptime
+    update_interval: 60s
+
+  - platform: wifi_signal
+    name: RSSI
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: scd4x
+    id: scd40
+    co2:
+      name: "CO2"
+      id: "co2"
+      filters:
+        - sliding_window_moving_average:
+            window_size: 15
+            send_every: 1
+    automatic_self_calibration: false
+    update_interval: 60s
+    measurement_mode: "periodic"
+    i2c_id: bus_a
+    ambient_pressure_compensation_source: bme280pressure
+
+
+  - platform: ld2410
+    moving_distance:
+      name: Radar Moving Distance
+      id: moving_distance
+    still_distance:
+      name: Radar Still Distance
+      id: still_distance
+    moving_energy:
+      name: Radar Move Energy
+      id: radar_moving_energy
+    still_energy:
+      name: Radar Still Energy
+      id: radar_still_energy
+    detection_distance:
+      name: Radar Detection Distance
+      id: radar_detection_distance
+    g0:
+      move_energy:
+        name: G0 Move Energy
+        id: g0_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G0 Still Energy
+        id: g0_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g1:
+      move_energy:
+        name: G1 Move Energy
+        id: g1_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G1 Still Energy
+        id: g1_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g2:
+      move_energy:
+        name: G2 Move Energy
+        id: g2_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G2 Still Energy
+        id: g2_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g3:
+      move_energy:
+        name: G3 Move Energy
+        id: g3_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G3 Still Energy
+        id: g3_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g4:
+      move_energy:
+        name: G4 Move Energy
+        id: g4_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G4 Still Energy
+        id: g4_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g5:
+      move_energy:
+        name: G5 Move Energy
+        id: g5_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G5 Still Energy
+        id: g5_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g6:
+      move_energy:
+        name: G6 Move Energy
+        id: g6_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G6 Still Energy
+        id: g6_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g7:
+      move_energy:
+        name: G7 Move Energy
+        id: g7_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G7 Still Energy
+        id: g7_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+    g8:
+      move_energy:
+        name: G8 Move Energy
+        id: g8_move_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+      still_energy:
+        name: G8 Still Energy
+        id: g8_still_energy
+        state_class: measurement
+        entity_category: "diagnostic"
+        internal: false
+
+  - platform: template
+    name: "Motion Gate Number"
+    state_class: measurement
+    accuracy_decimals: 0
+    entity_category: ""
+    lambda: |-
+      // Array of gate energies (you can use move_energy or still_energy, adjust as needed)
+      float gate_energies[9] = {
+          id(g0_move_energy).state,
+          id(g1_move_energy).state,
+          id(g2_move_energy).state,
+          id(g3_move_energy).state,
+          id(g4_move_energy).state,
+          id(g5_move_energy).state,
+          id(g6_move_energy).state,
+          id(g7_move_energy).state,
+          id(g8_move_energy).state
+      };
+      
+      // Variable to track the largest energy and its index
+      float max_energy = -1.0;
+      int max_index = -1;
+
+      for (int i = 0; i < 9; i++) {
+        if (gate_energies[i] > max_energy) {
+          max_energy = gate_energies[i];
+          max_index = i;
+        }
+      }
+      return max_index;
+    update_interval: 1s
+  
+  - platform: template
+    name: "Motion Gate Energy"
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: ""
+    lambda: |-
+        // Array of gate energies
+        float gate_energies[9] = {
+          id(g0_move_energy).state,
+          id(g1_move_energy).state,
+          id(g2_move_energy).state,
+          id(g3_move_energy).state,
+          id(g4_move_energy).state,
+          id(g5_move_energy).state,
+          id(g6_move_energy).state,
+          id(g7_move_energy).state,
+          id(g8_move_energy).state
+        };
+
+        // Variable to track the largest energy
+        float max_energy = -1.0;
+
+        for (int i = 0; i < 9; i++) {
+          if (gate_energies[i] > max_energy) {
+            max_energy = gate_energies[i];
+          }
+        }
+
+        // Return the maximum energy
+        return max_energy;
+    update_interval: 1s
+
+  - platform: template
+    name: "Still Gate Number"
+    state_class: measurement
+    accuracy_decimals: 0
+    entity_category: ""
+    lambda: |-
+      // Array of gate energies (you can use move_energy or still_energy, adjust as needed)
+      float gate_energies[9] = {
+          id(g0_still_energy).state,
+          id(g1_still_energy).state,
+          id(g2_still_energy).state,
+          id(g3_still_energy).state,
+          id(g4_still_energy).state,
+          id(g5_still_energy).state,
+          id(g6_still_energy).state,
+          id(g7_still_energy).state,
+          id(g8_still_energy).state
+      };
+      
+      // Variable to track the largest energy and its index
+      float max_energy = -1.0;
+      int max_index = -1;
+
+      for (int i = 0; i < 9; i++) {
+        if (gate_energies[i] > max_energy) {
+          max_energy = gate_energies[i];
+          max_index = i;
+        }
+      }
+      return max_index;
+    update_interval: 1s
+  
+  - platform: template
+    name: "Still Gate Energy"
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: ""
+    lambda: |-
+        // Array of gate energies
+        float gate_energies[9] = {
+          id(g0_still_energy).state,
+          id(g1_still_energy).state,
+          id(g2_still_energy).state,
+          id(g3_still_energy).state,
+          id(g4_still_energy).state,
+          id(g5_still_energy).state,
+          id(g6_still_energy).state,
+          id(g7_still_energy).state,
+          id(g8_still_energy).state
+        };
+
+        // Variable to track the largest energy
+        float max_energy = -1.0;
+
+        for (int i = 0; i < 9; i++) {
+          if (gate_energies[i] > max_energy) {
+            max_energy = gate_energies[i];
+          }
+        }
+
+        // Return the maximum energy
+        return max_energy;
+    update_interval: 1s
+    # Track the max value of g0_still_energy
+  - platform: template
+    name: "G0 Still Max Energy"
+    id: g0_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g0_still_energy).state > id(g0_still_max_energy).state) {
+        return id(g0_still_energy).state;
+      } else {
+        return id(g0_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G0 Move Max Energy"
+    id: g0_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g0_move_energy).state > id(g0_move_max_energy).state) {
+        return id(g0_move_energy).state;
+      } else {
+        return id(g0_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+  # Track the max value of g1_still_energy
+  - platform: template
+    name: "G1 Still Max Energy"
+    id: g1_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g1_still_energy).state > id(g1_still_max_energy).state) {
+        return id(g1_still_energy).state;
+      } else {
+        return id(g1_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G1 Move Max Energy"
+    id: g1_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g1_move_energy).state > id(g1_move_max_energy).state) {
+        return id(g1_move_energy).state;
+      } else {
+        return id(g1_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+  # Track the max value of g2_still_energy
+  - platform: template
+    name: "G2 Still Max Energy"
+    id: g2_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g2_still_energy).state > id(g2_still_max_energy).state) {
+        return id(g2_still_energy).state;
+      } else {
+        return id(g2_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G2 Move Max Energy"
+    id: g2_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g2_move_energy).state > id(g2_move_max_energy).state) {
+        return id(g2_move_energy).state;
+      } else {
+        return id(g2_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+  # Track the max value of g3_still_energy
+  - platform: template
+    name: "G3 Still Max Energy"
+    id: g3_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g3_still_energy).state > id(g3_still_max_energy).state) {
+        return id(g3_still_energy).state;
+      } else {
+        return id(g3_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G3 Move Max Energy"
+    id: g3_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g3_move_energy).state > id(g3_move_max_energy).state) {
+        return id(g3_move_energy).state;
+      } else {
+        return id(g3_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+  # Track the max value of g4_still_energy
+  - platform: template
+    name: "G4 Still Max Energy"
+    id: g4_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g4_still_energy).state > id(g4_still_max_energy).state) {
+        return id(g4_still_energy).state;
+      } else {
+        return id(g4_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G4 Move Max Energy"
+    id: g4_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g4_move_energy).state > id(g4_move_max_energy).state) {
+        return id(g4_move_energy).state;
+      } else {
+        return id(g4_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+  # Track the max value of g5_still_energy
+  - platform: template
+    name: "G5 Still Max Energy"
+    id: g5_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g5_still_energy).state > id(g5_still_max_energy).state) {
+        return id(g5_still_energy).state;
+      } else {
+        return id(g5_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G5 Move Max Energy"
+    id: g5_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g5_move_energy).state > id(g5_move_max_energy).state) {
+        return id(g5_move_energy).state;
+      } else {
+        return id(g5_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+
+  # Track the max value of g6_still_energy
+  - platform: template
+    name: "G6 Still Max Energy"
+    id: g6_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g6_still_energy).state > id(g6_still_max_energy).state) {
+        return id(g6_still_energy).state;
+      } else {
+        return id(g6_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+    
+  - platform: template
+    name: "G6 Move Max Energy"
+    id: g6_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g6_move_energy).state > id(g6_move_max_energy).state) {
+        return id(g6_move_energy).state;
+      } else {
+        return id(g6_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+
+      
+  # Track the max value of g7_still_energy
+  - platform: template
+    name: "G7 Still Max Energy"
+    id: g7_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g7_still_energy).state > id(g7_still_max_energy).state) {
+        return id(g7_still_energy).state;
+      } else {
+        return id(g7_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60  
+      
+  - platform: template
+    name: "G7 Move Max Energy"
+    id: g7_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g7_move_energy).state > id(g7_move_max_energy).state) {
+        return id(g7_move_energy).state;
+      } else {
+        return id(g7_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60
+
+
+  # Track the max value of g8_still_energy
+  - platform: template
+    name: "G8 Still Max Energy"
+    id: g8_still_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g8_still_energy).state > id(g8_still_max_energy).state) {
+        return id(g8_still_energy).state;
+      } else {
+        return id(g8_still_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60
+    
+  - platform: template
+    name: "G8 Move Max Energy"
+    id: g8_move_max_energy
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    update_interval: 1s
+    lambda: |-
+      if (id(g8_move_energy).state > id(g8_move_max_energy).state) {
+        return id(g8_move_energy).state;
+      } else {
+        return id(g8_move_max_energy).state;
+      }
+    filters:
+      - max:
+          window_size: 60
+          send_every: 60
+
+
+
+
+
+  - platform: bme280_i2c
+    id: bme_280
+    temperature:
+      name: "Temperature"
+      id: bme280temperature
+      filters:
+        - lambda: return x - id(bme280_temperature_offset).state;
+    pressure:
+      name: "Pressure"
+      id: bme280pressure
+    humidity:
+      name: "Humidity"
+      id: bme280humidity
+      filters:
+        - lambda: return x - id(bme280_humidity_offset).state;
+    update_interval: 60s
+    i2c_id: bus_a
+    address: 0x76
+
+  
+  - platform: ltr390
+    id: ltr_390
+    uv_index:
+      name: "UV Index"
+      id: ltr390uvindex
+    light:
+      name: "Ambient Light"
+      id: ltr390light
+    update_interval: 5s
+
+  
+light:
+  - platform: neopixelbus
+    id: rgb_light
+    type: GRB
+    variant: WS2812x
+    pin: GPIO3
+    num_leds: 1
+    name: "RGB Light"
+    method:
+      type: esp32_rmt
+      channel: 0
+    
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+
+  - platform: factory_reset
+    disabled_by_default: True
+    name: "Factory Reset ESP"
+    id: factory_reset_all
+
+  - platform: ld2410
+    factory_reset:
+      name: "Factory Reset Radar"
+    restart:
+      name: "Restart Radar"
+    query_params:
+      name: query params
+  - platform: template
+    name: "Calibrate SCD40 To 420ppm"
+    id: set_SCD40_calibrate
+    on_press:
+      - scd4x.perform_forced_calibration:
+          value: 420
+          id: scd40
+
+
+switch:
+  - platform: ld2410
+    bluetooth:
+      name: "Radar Control Bluetooth"
+      id: radar_bluetooth
+    engineering_mode:
+      name: "Radar Engineering Mode"
+      id: radar_engineering_mode
+      on_turn_on:
+        then:
+            - lambda: |-
+                id(g0_still_max_energy).publish_state(0.0);
+                id(g0_move_max_energy).publish_state(0.0);
+                id(g1_still_max_energy).publish_state(0.0);
+                id(g1_move_max_energy).publish_state(0.0);
+                id(g2_still_max_energy).publish_state(0.0);
+                id(g2_move_max_energy).publish_state(0.0);
+                id(g3_still_max_energy).publish_state(0.0);
+                id(g3_move_max_energy).publish_state(0.0);
+                id(g4_still_max_energy).publish_state(0.0);
+                id(g4_move_max_energy).publish_state(0.0);
+                id(g5_still_max_energy).publish_state(0.0);
+                id(g5_move_max_energy).publish_state(0.0);
+                id(g6_still_max_energy).publish_state(0.0);
+                id(g6_move_max_energy).publish_state(0.0);
+                id(g7_still_max_energy).publish_state(0.0);
+                id(g7_move_max_energy).publish_state(0.0);
+                id(g8_still_max_energy).publish_state(0.0);
+                id(g8_move_max_energy).publish_state(0.0);
+  - platform: template
+    name: "Startup Light Blink"
+    id: startup_light_blink
+    icon: mdi:lightbulb
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    entity_category: "config"
+  - platform: factory_reset
+    id: factory_reset_switch
+    internal: true
+
+text_sensor:
+  - platform: ld2410
+    version:
+      name: "Radar Firmware Version"
+
+select:
+  - platform: ld2410
+    distance_resolution:
+      name: "Radar Distance Resolution"
+      disabled_by_default: true
+
+
+
+#Used To Control RGB Light On Startup. Tells User Status Of Device
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_off: ink_ha_connected
+            - lambda: 'return id(cycleCounter) < 30;'
+            - switch.is_on: startup_light_blink
+
+          then:
+            - light.toggle:
+                id: rgb_light
+            - lambda: 'id(cycleCounter) += 1;'
+
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_off: ink_ha_connected
+            - lambda: 'return id(cycleCounter) > 30;'
+            - lambda: 'return id(cycleCounter) < 31;'
+            - switch.is_on: startup_light_blink
+
+          then:
+            - light.turn_off:
+                id: rgb_light
+            - lambda: 'id(cycleCounter) += 1;'
