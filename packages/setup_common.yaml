@@ -5,30 +5,6 @@ esphome:
     framework: $esphome_platformio_options_framework
     board_build.flash_mode: $esphome_platformio_options_board_build_flash_mode
     board_build.mcu: $esphome_platformio_options_board_build_mcu
-    #Removed in 2025.02.24
-    #board: $esphome_board
-  #This is handled by Bermuda now
-  # includes:
-  #   - custom_components/lib/OneEuro.h
-  #   - custom_components/ble_dist.h
-  # on_boot:
-  #   # - priority: 500
-  #   #   then:
-  #   #     - esp32_ble_tracker.stop_scan:
-  #   # - priority: 100
-  #   #   then:
-  #   #     - delay: 10s
-  #   #     - esp32_ble_tracker.start_scan:
-  #   #     - lambda: |-
-  #   #         addTracker("Sam Galaxy Note 20",      "07d77349-f361-456c-8294-3c10ecbba24d");
-  #   #         addTracker("Sam Galaxy Watch 5 Pro",  "098a3f90-ae57-48a1-8280-47c51921b06b");
-  #   #         addTracker("Ashley Galaxy S22 Ultra", "e39b1ea4-dd89-4d64-9590-763df68b668a");
-  #   then:
-  #     lambda: |-
-  #       addTracker("Sam Galaxy Note 20",      "07d77349-f361-456c-8294-3c10ecbba24d");
-  #       addTracker("Sam Galaxy Watch 7",  "c3bdf470-2377-423a-83f7-e1f2a8af17e4");
-  #       addTracker("Ashley Galaxy S22 Ultra", "e39b1ea4-dd89-4d64-9590-763df68b668a");
-  #Test
 
 esp32:
   board: $esp32_board
