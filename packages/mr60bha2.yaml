@@ -3,7 +3,7 @@ external_components:
       type: git
       url: https://github.com/hellosamblack/esphome-configurations
       ref: main
-    components: [ components/sam_seeed_mr60bha2 ]
+    components: [ sam_seeed_mr60bha2 ]
     refresh: 15min
 
 sam_seeed_mr60bha2:
