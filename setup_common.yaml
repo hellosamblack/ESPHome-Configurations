@@ -1,0 +1,112 @@
+esphome:
+  name: $device_name
+  friendly_name: $friendly_name
+  platformio_options:
+    framework: $esphome_platformio_options_framework
+    board_build.flash_mode: $esphome_platformio_options_board_build_flash_mode
+    board_build.mcu: $esphome_platformio_options_board_build_mcu
+    #Removed in 2025.02.24
+    #board: $esphome_board
+  #This is handled by Bermuda now
+  # includes:
+  #   - custom_components/lib/OneEuro.h
+  #   - custom_components/ble_dist.h
+  # on_boot:
+  #   # - priority: 500
+  #   #   then:
+  #   #     - esp32_ble_tracker.stop_scan:
+  #   # - priority: 100
+  #   #   then:
+  #   #     - delay: 10s
+  #   #     - esp32_ble_tracker.start_scan:
+  #   #     - lambda: |-
+  #   #         addTracker("Sam Galaxy Note 20",      "07d77349-f361-456c-8294-3c10ecbba24d");
+  #   #         addTracker("Sam Galaxy Watch 5 Pro",  "098a3f90-ae57-48a1-8280-47c51921b06b");
+  #   #         addTracker("Ashley Galaxy S22 Ultra", "e39b1ea4-dd89-4d64-9590-763df68b668a");
+  #   then:
+  #     lambda: |-
+  #       addTracker("Sam Galaxy Note 20",      "07d77349-f361-456c-8294-3c10ecbba24d");
+  #       addTracker("Sam Galaxy Watch 7",  "c3bdf470-2377-423a-83f7-e1f2a8af17e4");
+  #       addTracker("Ashley Galaxy S22 Ultra", "e39b1ea4-dd89-4d64-9590-763df68b668a");
+  #Test
+
+esp32:
+  board: $esp32_board
+  variant: $esp32_variant
+  framework:
+    type: $esp32_framework_type
+    #from https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
+    sdkconfig_options:
+      # @grigi found in testing that these options resulted in better responsiveness.
+      # BLE 4.2 is supported by ALL ESP32 boards that have bluetooth, the original and derivatives.
+      #This should be disabled if BLE 5.0 is active:
+      #https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig-reference.html#config-bt-ble-50-features-supported
+      CONFIG_BT_BLE_42_FEATURES_SUPPORTED: n
+      # Also enable this on any derivative boards (S2, C3 etc) but not the original ESP32.
+      CONFIG_BT_BLE_50_FEATURES_SUPPORTED: y
+      # Extend the watchdog timeout, so the device reboots if the device appears locked up for over 10 seconds.
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+logger:
+  #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
+  baud_rate: 0  # 0 Enables logging, but disables serial-port logging to free CPU and memory if set to zero
+  #Otherwise 9600 seems to be common
+#More logging
+  level: DEBUG
+#Less logging
+#level: INFO
+#logs:
+#  esp32_ble_tracker: VERY_VERBOSE
+
+api:
+  encryption:
+    key: $api_encryption_key
+  #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
+  # Only enable BLE tracking when wifi is up and api is connected
+  # Gives single-core ESP32-C3 devices time to manage wifi and authenticate with api
+  on_client_connected:
+     - esp32_ble_tracker.start_scan:
+        continuous: true
+  # Disable BLE tracking when there are no api connections live
+  on_client_disconnected:
+    if:
+      condition:
+        not:
+          api.connected:
+      then:
+        - esp32_ble_tracker.stop_scan:
+
+ota:
+  platform: esphome
+  password: $ota_password
+
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: $device_name
+    password: !secret wifi_password
+  #use_address: $static_ip
+  #https://esphome.io/components/wifi.html#wifi-power-save-mode
+  power_save_mode: light
+  networks:
+  - ssid: !secret wifi_office_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_bedroom_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_dining_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_entry_ssid
+    password: !secret wifi_password
+
+external_components:
+  source: github://hellosamblack/esphome-components
+  components: [ wifi_csi ]
+
+wifi_csi:
+  id: csi_motion
+  name: WiFi Motion detected
+  timing: 100ms
+  buffer_size: 100
+  hysteresis: 5
+  filters:
+    - delayed_off: 300000ms
+    - delayed_on: 500ms
