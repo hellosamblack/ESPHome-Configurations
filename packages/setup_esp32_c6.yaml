@@ -16,7 +16,7 @@ logger:
   baud_rate: 0
 
 wifi:
-  id: !extend wifi_id
+  #id: !extend wifi_id
   enable_btm: True
   enable_rrm: True
   
