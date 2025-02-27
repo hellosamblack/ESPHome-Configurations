@@ -11,6 +11,7 @@ esp32_ble_tracker:
   active: true  # allows outbound connections from HA to devices.
 
 api:
+  id: !extend api_id
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
   # Only enable BLE tracking when wifi is up and api is connected
   # Gives single-core ESP32-C3 devices time to manage wifi and authenticate with api
