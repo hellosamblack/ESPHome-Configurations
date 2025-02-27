@@ -6,22 +6,7 @@ esphome:
     board_build.flash_mode: $esphome_platformio_options_board_build_flash_mode
     board_build.mcu: $esphome_platformio_options_board_build_mcu
 
-esp32:
-  board: $esp32_board
-  variant: $esp32_variant
-  framework:
-    type: $esp32_framework_type
-    #from https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
-    sdkconfig_options:
-      # @grigi found in testing that these options resulted in better responsiveness.
-      # BLE 4.2 is supported by ALL ESP32 boards that have bluetooth, the original and derivatives.
-      #This should be disabled if BLE 5.0 is active:
-      #https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig-reference.html#config-bt-ble-50-features-supported
-      CONFIG_BT_BLE_42_FEATURES_SUPPORTED: n
-      # Also enable this on any derivative boards (S2, C3 etc) but not the original ESP32.
-      CONFIG_BT_BLE_50_FEATURES_SUPPORTED: y
-      # Extend the watchdog timeout, so the device reboots if the device appears locked up for over 10 seconds.
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+
 logger:
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
   baud_rate: 0  # 0 Enables logging, but disables serial-port logging to free CPU and memory if set to zero
@@ -72,6 +57,9 @@ wifi:
     password: !secret wifi_password
   - ssid: !secret wifi_entry_ssid
     password: !secret wifi_password
+
+mdns:
+  disabled: false
 
 external_components:
   source: github://hellosamblack/ESPHome-Configurations
