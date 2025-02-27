@@ -74,7 +74,7 @@ wifi:
     password: !secret wifi_password
 
 external_components:
-  source: github://hellosamblack/esphome-components
+  source: github://hellosamblack/ESPHome-Configurations
   components: [ wifi_csi ]
 
 wifi_csi:
