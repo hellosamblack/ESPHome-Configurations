@@ -19,7 +19,7 @@ binary_sensor:
       id: person_detected_raw
       device_class: occupancy
       #entity_category: "diagnostic"
-      on_value:
+      on_state:
         then:
           - sensor.template.publish:
               id: last_update_timestamp
@@ -33,7 +33,7 @@ binary_sensor:
       return id(person_detected_raw).state;
     filters:
       - delayed_off: 60s
-    on_value:
+    on_state:
         then:
           - sensor.template.publish:
               id: last_update_timestamp
@@ -112,8 +112,8 @@ sensor:
       filters:
         - exponential_moving_average:
             alpha: 0.1
-            send_every: 5s
-        - or: 
+            send_every: 5
+        - or:
           - delta: 2
           - heartbeat: 15s
       on_value:
@@ -129,7 +129,7 @@ sensor:
       filters:
         - exponential_moving_average:
             alpha: 0.1
-            send_every: 5s
+            send_every: 5
         - or: 
           - delta: 5
           - heartbeat: 15s

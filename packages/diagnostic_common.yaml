@@ -5,6 +5,9 @@ button:
 debug:
   update_interval: 30s
 
+time:
+  - platform: homeassistant
+    id: global_time
 sensor:
 
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
