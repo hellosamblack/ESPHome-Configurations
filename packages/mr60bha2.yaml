@@ -161,7 +161,7 @@ sensor:
       filters:
         - or: 
           - delta: 1
-            - heartbeat: 15s
+          - heartbeat: 15s
       on_value:
           then:
             - sensor.template.publish:
