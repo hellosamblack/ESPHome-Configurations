@@ -17,7 +17,7 @@ namespace esphome {
 namespace sam_seeed_mr60bha2 {
 static const uint8_t FRAME_HEADER_BUFFER = 0x01;
 static const uint16_t BREATH_RATE_TYPE_BUFFER = 0x0A14;
-static const uint16_t HASA_TARGET_TYPE_BUFFER = 0x0F09;
+static const uint16_t HAS_TARGET_TYPE_BUFFER = 0x0F09;
 static const uint16_t HEART_RATE_TYPE_BUFFER = 0x0A15;
 static const uint16_t DISTANCE_TYPE_BUFFER = 0x0A16;
 static const uint16_t PRINT_CLOUD_BUFFER = 0x0A04;
