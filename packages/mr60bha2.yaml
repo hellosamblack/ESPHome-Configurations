@@ -91,6 +91,9 @@ sensor:
       id: respiratory_rate
       state_class: measurement
       filters:
+        - exponential_moving_average:
+            alpha: 0.1
+            send_every: 1s
         - or: 
           - delta: 10%
           - heartbeat: 15s
@@ -99,6 +102,9 @@ sensor:
       state_class: measurement
       accuracy_decimals: 0
       filters:
+        - exponential_moving_average:
+            alpha: 0.1
+            send_every: 1s
         - or: 
           - delta: 10%
           - heartbeat: 15s
