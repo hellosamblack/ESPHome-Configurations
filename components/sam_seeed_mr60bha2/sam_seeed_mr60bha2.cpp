@@ -14,7 +14,7 @@ static const char *const TAG = "sam_seeed_mr60bha2";
 void SAM_MR60BHA2Component::dump_config() {
   ESP_LOGCONFIG(TAG, "Sam_MR60BHA2:");
 #ifdef USE_BINARY_SENSOR
-  LOG_BINARY_SENSOR(" ", "People Exist Binary Sensor", this->has_target_binary_sensor_);
+  LOG_BINARY_SENSOR(" ", "Has Target Binary Sensor", this->has_target_binary_sensor_);
 #endif
 #ifdef USE_SENSOR
   LOG_SENSOR(" ", "Breath Rate Sensor", this->breath_rate_sensor_);
@@ -87,7 +87,7 @@ bool SAM_MR60BHA2Component::validate_message_() {
   uint16_t frame_type = encode_uint16(data[5], data[6]);
 
   if (frame_type != BREATH_RATE_TYPE_BUFFER && frame_type != HEART_RATE_TYPE_BUFFER &&
-      frame_type != DISTANCE_TYPE_BUFFER && frame_type != PEOPLE_EXIST_TYPE_BUFFER &&
+      frame_type != DISTANCE_TYPE_BUFFER && frame_type != HAS_TARGET_TYPE_BUFFER &&
       frame_type != PRINT_CLOUD_BUFFER) {
     return false;
   }
@@ -130,8 +130,8 @@ bool SAM_MR60BHA2Component::validate_message_() {
 
 void SAM_MR60BHA2Component::process_frame_(uint16_t frame_id, uint16_t frame_type, const uint8_t *data, size_t length) {
   if (this->has_target_binary_sensor_ != nullptr && !this->has_target_binary_sensor_->state &&
-      frame_type != PEOPLE_EXIST_TYPE_BUFFER) {
-    // Do not process other frames while people exists sensor is still false
+      frame_type != HAS_TARGET_TYPE_BUFFER) {
+    // Do not process other frames while has target sensor is still false
     return;
   }
   switch (frame_type) {
@@ -148,7 +148,7 @@ void SAM_MR60BHA2Component::process_frame_(uint16_t frame_id, uint16_t frame_typ
         }
       }
       break;
-    case PEOPLE_EXIST_TYPE_BUFFER:
+    case HAS_TARGET_TYPE_BUFFER:
       if (this->has_target_binary_sensor_ != nullptr && length >= 2) {
         uint16_t has_target_int = encode_uint16(data[1], data[0]);
         if (this->has_target_binary_sensor_->state == has_target_int) {
