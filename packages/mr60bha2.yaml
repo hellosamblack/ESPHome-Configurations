@@ -159,9 +159,9 @@ sensor:
       state_class: measurement
       accuracy_decimals: 0
       filters:
-        - or: 
-          - delta: 1
-          - heartbeat: 15s
+        #- or: 
+        - delta: 1
+        #  - heartbeat: 15s
       on_value:
           then:
             - sensor.template.publish:
