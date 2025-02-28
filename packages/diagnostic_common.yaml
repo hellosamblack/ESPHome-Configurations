@@ -42,6 +42,7 @@ sensor:
 
   - platform: template
     name: "Last Update Timestamp"
+    id: last_update_timestamp
     lambda: |-
       time_t now = id(global_time).now().timestamp;
       return now;
