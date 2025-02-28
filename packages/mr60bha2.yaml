@@ -95,7 +95,7 @@ sensor:
             alpha: 0.1
             send_every: 1s
         - or: 
-          - delta: 10%
+          - delta: 2
           - heartbeat: 15s
       name: "Heart Rate"
       id: heart_rate
@@ -106,7 +106,7 @@ sensor:
             alpha: 0.1
             send_every: 1s
         - or: 
-          - delta: 10%
+          - delta: 5
           - heartbeat: 15s
     distance:
       name: "Distance"
