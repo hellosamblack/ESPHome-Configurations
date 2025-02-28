@@ -90,6 +90,7 @@ sensor:
 
 
   - platform: sam_seeed_mr60bha2
+    id: sam_seeed_mr60bha2_id
     breath_rate:
       name: "Respiratory Rate"
       id: respiratory_rate
@@ -117,6 +118,8 @@ sensor:
       accuracy_decimals: 1
       filters:
         - multiply: .0328084 # Convert centimeters to feet
+        - filters:
+          - delta: .5
         # - or:
         #   - delta: 1
         #   - exponential_moving_average: 
