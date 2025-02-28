@@ -8,6 +8,10 @@ external_components:
 
 sam_seeed_mr60bha2:
 
+logger:
+  logs:
+      bh1750.sensor: INFO
+
 binary_sensor:
   - platform: sam_seeed_mr60bha2
     has_target:
