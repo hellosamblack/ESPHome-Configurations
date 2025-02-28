@@ -121,6 +121,7 @@ sensor:
             - sensor.template.publish:
                 id: last_update_timestamp
                 state: !lambda "return id(global_time).now().timestamp;"
+    heart_rate:
       name: "Heart Rate"
       id: heart_rate
       state_class: measurement
