@@ -53,11 +53,9 @@ light:
           update_interval: 1.5s
       - lambda:
           name: "Distance Visualization"
-          update_interval: 1s
+          update_interval: 250ms
           lambda: |-
-            if (!id(person_detected_raw).state) {
-              id(led_ring).turn_off();
-            } else {
+            if (id(person_detected_raw).state) {
               float distance_var = id(distance).state;
               float brightness = (distance_var / 10.0) * 89.0 + 11.0; // Map distance 0-10 to brightness 11-100
               int red = (int)(255 * (1 - (distance_var / 10.0))); // Red decreases as distance increases
@@ -66,8 +64,11 @@ light:
               auto call = id(led_ring).turn_on();
               call.set_brightness(brightness / 100.0);
               call.set_rgb(red / 255.0, green / 255.0, blue / 255.0);
-              call.perform();
+              call.perform(); 
+            } else {
+              id(led_ring).turn_off();
             }
+
 
 sensor:
   - platform: bh1750
