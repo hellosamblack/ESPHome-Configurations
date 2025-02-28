@@ -37,6 +37,15 @@ sensor:
     loop_time:
       name: "Loop Time"
 
+  - platform: template
+    name: "Last Update Timestamp"
+    lambda: |-
+      time_t now = id(global_time).now().timestamp;
+      return now;
+    update_interval: never
+    device_class: timestamp
+
+
 text_sensor:
   - platform: template
     name: "Build Timestamp"

@@ -19,6 +19,11 @@ binary_sensor:
       id: person_detected_raw
       device_class: occupancy
       entity_category: "diagnostic"
+      on_value:
+        then:
+          - sensor.template.publish:
+              id: last_update_timestamp
+              state: !lambda "return id(global_time).now().timestamp;"
 
   - platform: template
     id: person_detected
@@ -28,6 +33,11 @@ binary_sensor:
       return id(person_detected_raw).state;
     filters:
       - delayed_off: 60s
+    on_value:
+        then:
+          - sensor.template.publish:
+              id: last_update_timestamp
+              state: !lambda "return id(global_time).now().timestamp;"
 
 light:
   - platform: esp32_rmt_led_strip
@@ -87,6 +97,11 @@ sensor:
         - or: 
           - delta: 10%
           - heartbeat: 15s
+    on_value:
+        then:
+          - sensor.template.publish:
+              id: last_update_timestamp
+              state: !lambda "return id(global_time).now().timestamp;"
 
 
   - platform: sam_seeed_mr60bha2
@@ -101,6 +116,11 @@ sensor:
         - or: 
           - delta: 2
           - heartbeat: 15s
+      on_value:
+          then:
+            - sensor.template.publish:
+                id: last_update_timestamp
+                state: !lambda "return id(global_time).now().timestamp;"
       name: "Heart Rate"
       id: heart_rate
       state_class: measurement
@@ -112,6 +132,11 @@ sensor:
         - or: 
           - delta: 5
           - heartbeat: 15s
+      on_value:
+        then:
+          - sensor.template.publish:
+              id: last_update_timestamp
+              state: !lambda "return id(global_time).now().timestamp;"
     distance:
       name: "Distance"
       id: distance
@@ -122,6 +147,11 @@ sensor:
         - or: 
           - delta: 10%
           - heartbeat: 15s
+      on_value:
+          then:
+            - sensor.template.publish:
+                id: last_update_timestamp
+                state: !lambda "return id(global_time).now().timestamp;"
     num_targets:
       name: "Number of Targets"
       id: number_of_targets
@@ -131,4 +161,9 @@ sensor:
       filters:
         - or: 
           - delta: 1
-          - heartbeat: 15s
+            - heartbeat: 15s
+      on_value:
+          then:
+            - sensor.template.publish:
+                id: last_update_timestamp
+                state: !lambda "return id(global_time).now().timestamp;"
