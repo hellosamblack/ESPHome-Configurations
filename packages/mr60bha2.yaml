@@ -93,7 +93,7 @@ sensor:
       filters:
         - exponential_moving_average:
             alpha: 0.1
-            send_every: 1s
+            send_every: 5s
         - or: 
           - delta: 2
           - heartbeat: 15s
@@ -104,7 +104,7 @@ sensor:
       filters:
         - exponential_moving_average:
             alpha: 0.1
-            send_every: 1s
+            send_every: 5s
         - or: 
           - delta: 5
           - heartbeat: 15s
