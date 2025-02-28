@@ -53,7 +53,7 @@ light:
           update_interval: 1.5s
       - lambda:
           name: "Distance Visualization"
-          update_interval: 250ms
+          update_interval: 1s
           lambda: |-
             if (id(person_detected_raw).state) {
               float distance_var = id(distance).state;
@@ -80,13 +80,9 @@ sensor:
     id: illuminance
     state_class: measurement
     filters:
-      - or:
-          - delta: 10
-          - exponential_moving_average:
-              #Closer to 1.0: Less smoothing, more responsive to recent changes. The output will more closely follow the raw sensor data.
-              #Closer to 0.0: More smoothing, less responsive to recent changes. The output will be more stable, but changes will be reflected more slowly.
-              alpha: 0.2  # Adjust alpha value (0.0 - 1.0)
-              send_every: 15
+        - or: 
+          - delta: 10%
+          - heartbeat: 15s
 
 
   - platform: sam_seeed_mr60bha2
@@ -94,22 +90,18 @@ sensor:
       name: "Respiratory Rate"
       id: respiratory_rate
       state_class: measurement
-      # filters:
-      #   - or:
-      #     - delta: 2
-      #     - exponential_moving_average: 
-      #         alpha: .2
-      #         send_every: 5
-    heart_rate:
+      filters:
+        - or: 
+          - delta: 10%
+          - heartbeat: 15s
       name: "Heart Rate"
       id: heart_rate
       state_class: measurement
-      # filters:
-      #   - or:
-      #     - delta: 3
-      #     - exponential_moving_average: 
-      #         alpha: .2
-      #         send_every: 5
+      accuracy_decimals: 0
+      filters:
+        - or: 
+          - delta: 10%
+          - heartbeat: 15s
     distance:
       name: "Distance"
       id: distance
@@ -117,17 +109,16 @@ sensor:
       accuracy_decimals: 1
       filters:
         - multiply: .0328084 # Convert centimeters to feet
-        - delta: .5
-        # - or:
-        #   - delta: 1
-        #   - exponential_moving_average: 
-        #       alpha: .2
-        #       send_every: 5
+        - or: 
+          - delta: 10%
+          - heartbeat: 15s
     num_targets:
       name: "Number of Targets"
       id: number_of_targets
       unit_of_measurement: "People"
       state_class: measurement
       accuracy_decimals: 0
-      # filters:
-      # - delta: 1
+      filters:
+        - or: 
+          - delta: 1
+          - heartbeat: 15s
