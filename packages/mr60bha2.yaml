@@ -152,18 +152,18 @@ sensor:
             - sensor.template.publish:
                 id: last_update_timestamp
                 state: !lambda "return id(global_time).now().timestamp;"
-    num_targets:
-      name: "Number of Targets"
-      id: number_of_targets
-      unit_of_measurement: "People"
-      state_class: measurement
-      accuracy_decimals: 0
-      filters:
-        #- or: 
-        - delta: 1
-        #  - heartbeat: 15s
-      on_value:
-          then:
-            - sensor.template.publish:
-                id: last_update_timestamp
-                state: !lambda "return id(global_time).now().timestamp;"
+    # num_targets:
+    #   name: "Number of Targets"
+    #   id: number_of_targets
+    #   unit_of_measurement: "People"
+    #   state_class: measurement
+    #   accuracy_decimals: 0
+    #   filters:
+    #     #- or: 
+    #     - delta: 1
+    #     #  - heartbeat: 15s
+    #   on_value:
+    #       then:
+    #         - sensor.template.publish:
+    #             id: last_update_timestamp
+    #             state: !lambda "return id(global_time).now().timestamp;"
