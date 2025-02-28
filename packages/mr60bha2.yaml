@@ -55,15 +55,19 @@ light:
           name: "Distance Visualization"
           update_interval: 1s
           lambda: |-
-            float distance_var = id(distance).state;
-            float brightness = (distance_var / 10.0) * 89.0 + 11.0; // Map distance 0-10 to brightness 11-100
-            int red = (int)(255 * (1 - (distance_var / 10.0))); // Red decreases as distance increases
-            int green = (int)(255 * (distance_var / 10.0)); // Green increases as distance increases
-            int blue = (int)(255 * (distance_var / 10.0)); // Blue increases as distance increases
-            auto call = id(led_ring).turn_on();
-            call.set_brightness(brightness / 100.0);
-            call.set_rgb(red / 255.0, green / 255.0, blue / 255.0);
-            call.perform();
+            if (!id(person_detected_raw).state) {
+              id(led_ring).turn_off();
+            } else {
+              float distance_var = id(distance).state;
+              float brightness = (distance_var / 10.0) * 89.0 + 11.0; // Map distance 0-10 to brightness 11-100
+              int red = (int)(255 * (1 - (distance_var / 10.0))); // Red decreases as distance increases
+              int green = (int)(255 * (distance_var / 10.0)); // Green increases as distance increases
+              int blue = (int)(255 * (distance_var / 10.0)); // Blue increases as distance increases
+              auto call = id(led_ring).turn_on();
+              call.set_brightness(brightness / 100.0);
+              call.set_rgb(red / 255.0, green / 255.0, blue / 255.0);
+              call.perform();
+            }
 
 sensor:
   - platform: bh1750
