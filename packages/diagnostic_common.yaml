@@ -1,16 +1,39 @@
+# Define buttons for various actions
 button:
   - platform: restart
     name: Restart
+    icon: mdi:power-cycle
 
+  - platform: factory_reset
+    disabled_by_default: True
+    name: "Factory Reset ESP"
+    id: factory_reset_all
+
+# Define a switch for factory reset, used internally
+switch:
+  - platform: factory_reset
+    id: factory_reset_switch
+    internal: true
+
+# Enable debug logging with an update interval of 30 seconds
 debug:
   update_interval: 30s
 
+# Define a time platform to sync with Home Assistant
 time:
   - platform: homeassistant
     id: global_time
+
+# Define sensors for various diagnostic metrics
 sensor:
 
-  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+  # Internal temperature of the ESP
+  - platform: internal_temperature
+    name: "ESP Temperature"
+    id: sys_esp_temperature
+
+  # WiFi signal strength in dB
+  - platform: wifi_signal
     name: "WiFi Signal dB"
     id: wifi_signal_db
     unit_of_measurement: "dB"
@@ -18,7 +41,8 @@ sensor:
     entity_category: "diagnostic"
     internal: false
 
-  - platform: copy # Reports the WiFi signal strength in %
+  # WiFi signal strength as a percentage
+  - platform: copy
     source_id: wifi_signal_db
     name: "WiFi Signal Strength"
     id: wifi_signal_strength
@@ -28,10 +52,12 @@ sensor:
     entity_category: "diagnostic"
     device_class: signal_strength
 
+  # Uptime of the device
   - platform: uptime
     name: Uptime
     entity_category: "diagnostic"
 
+  # Debug information about heap memory and loop time
   - platform: debug
     free:
       name: "Heap Free"
@@ -40,6 +66,7 @@ sensor:
     loop_time:
       name: "Loop Time"
 
+  # Template sensor for the last update timestamp
   - platform: template
     name: "Last Update Timestamp"
     id: last_update_timestamp
@@ -49,14 +76,16 @@ sensor:
     update_interval: never
     device_class: timestamp
 
-
+# Define text sensors for various diagnostic information
 text_sensor:
+  # Build timestamp of the firmware
   - platform: template
     name: "Build Timestamp"
     id: build_timestamp
     lambda: |-
       return {"2025-02-27T08:02:00Z"};
 
+  # ESPHome project version (short)
   - platform: template
     name: "ESPHome Project Version"
     id: esphome_project_version_text_short
@@ -66,6 +95,7 @@ text_sensor:
     lambda: |-
       return { ESPHOME_PROJECT_VERSION };
 
+  # ESPHome project version (detailed)
   - platform: template
     name: "ESPHome Project Version Detailed"
     id: esphome_project_version_text_detailed
@@ -75,6 +105,7 @@ text_sensor:
     lambda: |-
       return { ESPHOME_PROJECT_VERSION " " + App.get_compilation_time() };
 
+  # ESPHome project name
   - platform: template
     name: "ESPHome Project Name"
     id: esphome_project_name
@@ -84,19 +115,21 @@ text_sensor:
     lambda: |-
       return { ESPHOME_PROJECT_NAME };
 
-
+  # ESPHome version
   - platform: version
     name: "ESPHome Version"
     id: esphome_version
     entity_category: "diagnostic"
     internal: False
 
+  # Copy of the ESPHome version
   - platform: copy
     source_id: esphome_version
     id: esphome_version_copy
     name: "ESPHome Version Copy"
     internal: False
 
+  # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
     ip_address:
       name: ESP IP Address
@@ -113,6 +146,7 @@ text_sensor:
     dns_address:
       name: ESP DNS Address
 
+  # Debug information about the device and reset reason
   - platform: debug
     device:
       name: "Device Info"

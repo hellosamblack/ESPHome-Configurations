@@ -1,3 +1,4 @@
+# ESPHome configuration
 esphome:
   platformio_options:
     board_build.flash_mode: dio
@@ -8,19 +9,20 @@ esphome:
       - lambda: |-
           id(radar_bluetooth).turn_off();
 
-# dashboard_import:
-#   package_import_url: github://hellosamblack/MSR-1/Integrations/ESPHome/MSR-1_BLE.yaml
-#   import_full_config: false
-
+# ESP32 board configuration
 esp32:
   board: esp32-c3-devkitm-1
   framework:
     type: arduino
+
+# Captive portal for WiFi configuration
 captive_portal:
 
+# Web server configuration
 web_server:
   port: 80
 
+# API configuration
 api:
   on_client_connected:
     - delay: 1s
@@ -34,7 +36,7 @@ api:
         - rtttl.play:
             rtttl: !lambda 'return song_str;'
 
-    #Co2 Calibration Service
+    # CO2 Calibration Service
     - service: calibrate_co2_value
       variables:
         co2_ppm: float
@@ -43,7 +45,7 @@ api:
             value: !lambda 'return co2_ppm;'
             id: scd40
 
-    #Setting HLK Password
+    # Setting HLK Password
     - service: set_ld2410_bluetooth_password
       variables:
         password: string
@@ -52,6 +54,7 @@ api:
             id: ld2410_radar
             password: !lambda 'return password;'
 
+# Global variables
 globals:
   - id: cycleCounter
     type: int
@@ -62,11 +65,13 @@ globals:
     type: uint32_t
     initial_value: '0'
 
+# I2C bus configuration
 i2c:
   sda: GPIO1
   scl: GPIO0
   id: bus_a
 
+# UART configuration
 uart:
   tx_pin: GPIO21
   rx_pin: GPIO20
@@ -74,8 +79,8 @@ uart:
   parity: NONE
   stop_bits: 1
 
+# Number entities for BME280 sensor offsets
 number:
-
   - platform: template
     name: BME280 Humidity Offset
     id: bme280_humidity_offset
@@ -104,18 +109,24 @@ number:
     step: 0.1
     mode: box
 
-# Buzzer
+# Buzzer configuration
 output:
   - platform: ledc
     pin: GPIO10
     id: buzzer
-rtttl:
- output: buzzer
 
+# RTTTL configuration for buzzer
+rtttl:
+  output: buzzer
+
+# Binary sensors
 binary_sensor:
+  # Status binary sensor
   - platform: status
     name: Online
     id: ink_ha_connected
+
+  # GPIO binary sensor for reset button
   - platform: gpio
     pin: 
       number: GPIO9
@@ -136,15 +147,11 @@ binary_sensor:
             if (millis() - id(button_press_timestamp) >= 5000) {
               // Remove Wifi
               id(factory_reset_switch).turn_on();
-              
             }
 
+# Sensors
 sensor:
-
-  - platform: internal_temperature
-    name: "ESP Temperature"
-    id: sys_esp_temperature
-
+  # SCD4x CO2 sensor
   - platform: scd4x
     id: scd40
     co2:
@@ -160,6 +167,7 @@ sensor:
     i2c_id: bus_a
     ambient_pressure_compensation_source: bme280pressure
 
+  # BME280 sensor for temperature, pressure, and humidity
   - platform: bme280_i2c
     id: bme_280
     temperature:
@@ -179,7 +187,7 @@ sensor:
     i2c_id: bus_a
     address: 0x76
 
-  
+  # LTR390 sensor for UV index and ambient light
   - platform: ltr390
     id: ltr_390
     uv_index:
@@ -190,7 +198,7 @@ sensor:
       id: ltr390light
     update_interval: 5s
 
-  
+# Light configuration for RGB light
 light:
   - platform: neopixelbus
     id: rgb_light
@@ -202,18 +210,9 @@ light:
     method:
       type: esp32_rmt
       channel: 0
-    
 
+# Button configuration for SCD40 calibration
 button:
-  - platform: restart
-    icon: mdi:power-cycle
-    name: "ESP Reboot"
-
-  - platform: factory_reset
-    disabled_by_default: True
-    name: "Factory Reset ESP"
-    id: factory_reset_all
-
   - platform: template
     name: "Calibrate SCD40 To 420ppm"
     id: set_SCD40_calibrate
@@ -222,9 +221,8 @@ button:
           value: 420
           id: scd40
 
-
+# Switch configuration for startup light blink
 switch:
-
   - platform: template
     name: "Startup Light Blink"
     id: startup_light_blink
@@ -232,15 +230,8 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     optimistic: true
     entity_category: "config"
-  - platform: factory_reset
-    id: factory_reset_switch
-    internal: true
 
-
-
-
-
-#Used To Control RGB Light On Startup. Tells User Status Of Device
+# Interval actions for controlling RGB light on startup
 interval:
   - interval: 1s
     then:
@@ -249,7 +240,6 @@ interval:
             - binary_sensor.is_off: ink_ha_connected
             - lambda: 'return id(cycleCounter) < 30;'
             - switch.is_on: startup_light_blink
-
           then:
             - light.toggle:
                 id: rgb_light
@@ -263,7 +253,6 @@ interval:
             - lambda: 'return id(cycleCounter) > 30;'
             - lambda: 'return id(cycleCounter) < 31;'
             - switch.is_on: startup_light_blink
-
           then:
             - light.turn_off:
                 id: rgb_light
