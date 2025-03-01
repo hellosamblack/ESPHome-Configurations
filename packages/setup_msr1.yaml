@@ -2,7 +2,6 @@
 esphome:
   platformio_options:
     board_build.flash_mode: dio
-
   on_boot:
   - priority: 900.0
     then:
@@ -36,23 +35,6 @@ api:
         - rtttl.play:
             rtttl: !lambda 'return song_str;'
 
-    # CO2 Calibration Service
-    - service: calibrate_co2_value
-      variables:
-        co2_ppm: float
-      then:
-        - scd4x.perform_forced_calibration:
-            value: !lambda 'return co2_ppm;'
-            id: scd40
-
-    # Setting HLK Password
-    - service: set_ld2410_bluetooth_password
-      variables:
-        password: string
-      then:
-        - bluetooth_password.set:
-            id: ld2410_radar
-            password: !lambda 'return password;'
 
 # Global variables
 globals:
@@ -79,36 +61,6 @@ uart:
   parity: NONE
   stop_bits: 1
 
-# Number entities for BME280 sensor offsets
-number:
-  - platform: template
-    name: BME280 Humidity Offset
-    id: bme280_humidity_offset
-    restore_value: true
-    initial_value: -18.86
-    min_value: -70.0
-    max_value: 70.0
-    entity_category: "CONFIG"
-    unit_of_measurement: "%"
-    optimistic: true
-    update_interval: never
-    step: 0.1
-    mode: box
-
-  - platform: template
-    name: BME280 Temperature Offset
-    id: bme280_temperature_offset
-    restore_value: true
-    initial_value: 14.54
-    min_value: -70.0
-    max_value: 70.0
-    entity_category: "CONFIG"
-    unit_of_measurement: "°C"
-    optimistic: true
-    update_interval: never
-    step: 0.1
-    mode: box
-
 # Buzzer configuration
 output:
   - platform: ledc
@@ -125,29 +77,6 @@ binary_sensor:
   - platform: status
     name: Online
     id: ink_ha_connected
-
-  # GPIO binary sensor for reset button
-  - platform: gpio
-    pin: 
-      number: GPIO9
-      inverted: true
-      ignore_strapping_warning: true
-      mode:
-        input: true
-        pullup: true
-    id: reset_button
-    on_press:
-      then:
-        - lambda: |-
-            id(button_press_timestamp) = millis();
-            
-    on_release:
-      then:
-        - lambda: |-
-            if (millis() - id(button_press_timestamp) >= 5000) {
-              // Remove Wifi
-              id(factory_reset_switch).turn_on();
-            }
 
 # Sensors
 sensor:
@@ -212,14 +141,6 @@ light:
       channel: 0
 
 # Button configuration for SCD40 calibration
-button:
-  - platform: template
-    name: "Calibrate SCD40 To 420ppm"
-    id: set_SCD40_calibrate
-    on_press:
-      - scd4x.perform_forced_calibration:
-          value: 420
-          id: scd40
 
 # Switch configuration for startup light blink
 switch:
