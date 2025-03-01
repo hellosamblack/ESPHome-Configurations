@@ -1,10 +1,41 @@
 ld2410:
   id: ld2410_radar
 
-# Numbers For Configuration
-number:
-  - platform: ld2410
 
+switch:
+  - platform: ld2410
+    bluetooth:
+      name: "Radar Control Bluetooth"
+      id: radar_bluetooth
+
+number:
+  - platform: template
+    name: BME280 Humidity Offset
+    id: bme280_humidity_offset
+    restore_value: true
+    initial_value: -18.86
+    min_value: -70.0
+    max_value: 70.0
+    entity_category: "CONFIG"
+    unit_of_measurement: "%"
+    optimistic: true
+    update_interval: never
+    step: 0.1
+    mode: box
+
+  - platform: template
+    name: BME280 Temperature Offset
+    id: bme280_temperature_offset
+    restore_value: true
+    initial_value: 14.54
+    min_value: -70.0
+    max_value: 70.0
+    entity_category: "CONFIG"
+    unit_of_measurement: "°C"
+    optimistic: true
+    update_interval: never
+    step: 0.1
+    mode: box
 # Setting start of zone 1 occupancy
   - platform: template
     name: "Radar Zone 1 Start"
