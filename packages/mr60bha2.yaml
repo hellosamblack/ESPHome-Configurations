@@ -26,10 +26,26 @@ binary_sensor:
               state: !lambda "return id(global_time).now().timestamp;"
 
   - platform: template
+    id: stuck_distance_detected
+    name: "Stuck Distance Detected"
+    lambda: |-
+      static float last_distance = 0;
+      static uint32_t last_change = 0;
+      if (id(distance).state != last_distance) {
+        last_distance = id(distance).state;
+        last_change = id(global_time).now().timestamp;
+      }
+      return (id(global_time).now().timestamp - last_change) > 600;
+    device_class: problem
+
+  - platform: template
     id: person_detected
     name: "Person Detected"
     device_class: occupancy
     lambda: |-
+      if (id(stuck_distance_detected).state) {
+        return false;
+      }
       return id(person_detected_raw).state;
     filters:
       - delayed_off: 60s
