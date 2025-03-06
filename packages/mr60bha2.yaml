@@ -45,8 +45,9 @@ binary_sensor:
     lambda: |-
       if (id(stuck_distance_detected).state) {
         return false;
+      } else {
+        return id(person_detected_raw).state;
       }
-      return id(person_detected_raw).state;
     filters:
       - delayed_off: 60s
     on_state:
