@@ -19,11 +19,6 @@ binary_sensor:
       id: person_detected_raw
       device_class: occupancy
       #entity_category: "diagnostic"
-      on_state:
-        then:
-          - sensor.template.publish:
-              id: last_update_timestamp
-              state: !lambda "return id(global_time).now().timestamp;"
 
   - platform: template
     id: stuck_distance_detected
@@ -44,6 +39,7 @@ binary_sensor:
     id: person_detected
     name: "Person Detected"
     device_class: occupancy
+    icon: mdi:account
     lambda: |-
       if (id(stuck_distance_detected).state) {
         return false;
@@ -52,11 +48,82 @@ binary_sensor:
       }
     filters:
       - delayed_off: 60s
+    on_turn_on:
+      then:
+        - if:
+            condition:
+              - switch.is_on: enable_person_detected_flash
+            then:
+              - light.turn_on:
+                  id: led_ring
+                  red: 0
+                  green: 255
+                  blue: 0
+                  brightness: 100%
+              - delay: 500ms
+              - light.turn_off: led_ring
+    on_turn_off:
+      then:
+        - if:
+            condition:
+              - switch.is_on: enable_person_detected_flash
+            then:
+              - light.turn_on:
+                  id: led_ring
+                  red: 1
+                  green: 0
+                  blue: 0
+                  brightness: 100%
+              - delay: 500ms
+              - light.turn_off: led_ring
+
+  - platform: homeassistant
+    id: sleeping
+    entity_id: input_boolean.sleeping
+    internal: true
     on_state:
-        then:
-          - sensor.template.publish:
-              id: last_update_timestamp
-              state: !lambda "return id(global_time).now().timestamp;"
+      then:
+        - if:
+            condition:
+              - binary_sensor.is_on: sleeping
+              - switch.is_on: enable_sleeping_effect
+            then:
+              - light.turn_on:
+                  id: led_ring
+                  red: 127
+                  green: 0
+                  blue: 127
+                  brightness: 50%
+                  transition_length: 5s
+              - delay: 5s
+              - light.turn_off:
+                  id: led_ring
+                  transition_length: 5s
+
+switch:
+  - platform: template
+    name: "Enable Person Detected Flash"
+    id: enable_person_detected_flash
+    icon: mdi:toggle-switch
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    entity_category: "config"
+
+  - platform: template
+    name: "Enable Stuck Distance Flash"
+    id: enable_stuck_distance_flash
+    icon: mdi:toggle-switch
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    entity_category: "config"
+
+  - platform: template
+    name: "Enable Sleeping Effect"
+    id: enable_sleeping_effect
+    icon: mdi:toggle-switch
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    entity_category: "config"
 
 light:
   - platform: esp32_rmt_led_strip
@@ -102,7 +169,6 @@ light:
               id(led_ring).turn_off();
             }
 
-
 sensor:
   - platform: bh1750
     name: "Ambient Light"
@@ -116,12 +182,6 @@ sensor:
         - or: 
           - delta: 10%
           - heartbeat: 15s
-    on_value:
-        then:
-          - sensor.template.publish:
-              id: last_update_timestamp
-              state: !lambda "return id(global_time).now().timestamp;"
-
 
   - platform: sam_seeed_mr60bha2
     breath_rate:
@@ -135,11 +195,6 @@ sensor:
         - or:
           - delta: 2
           - heartbeat: 15s
-      on_value:
-          then:
-            - sensor.template.publish:
-                id: last_update_timestamp
-                state: !lambda "return id(global_time).now().timestamp;"
     heart_rate:
       name: "Heart Rate"
       id: heart_rate
@@ -152,11 +207,6 @@ sensor:
         - or: 
           - delta: 5
           - heartbeat: 15s
-      on_value:
-        then:
-          - sensor.template.publish:
-              id: last_update_timestamp
-              state: !lambda "return id(global_time).now().timestamp;"
     distance:
       name: "Distance"
       id: distance
@@ -168,10 +218,39 @@ sensor:
           - delta: 10%
           - heartbeat: 15s
       on_value:
-          then:
-            - sensor.template.publish:
-                id: last_update_timestamp
-                state: !lambda "return id(global_time).now().timestamp;"
+        then:
+          - if:
+              condition:
+                - binary_sensor.is_on: stuck_distance_detected
+                - switch.is_on: enable_stuck_distance_flash
+              then:
+                - light.turn_on:
+                    id: led_ring
+                    red: 255
+                    green: 0
+                    blue: 0
+                    brightness: 100%
+                - delay: 500ms
+                - light.turn_off: led_ring
+                - delay: 500ms
+                - light.turn_on:
+                    id: led_ring
+                    red: 255
+                    green: 0
+                    blue: 0
+                    brightness: 100%
+                - delay: 500ms
+                - light.turn_off: led_ring
+                - delay: 500ms
+                - light.turn_on:
+                    id: led_ring
+                    red: 255
+                    green: 0
+                    blue: 0
+                    brightness: 100%
+                - delay: 500ms
+                - light.turn_off: led_ring
+
     num_targets:
       name: "Number of Targets"
       id: number_of_targets
@@ -182,8 +261,3 @@ sensor:
         - or: 
           - delta: 1
           - heartbeat: 15s
-      on_value:
-          then:
-            - sensor.template.publish:
-                id: last_update_timestamp
-                state: !lambda "return id(global_time).now().timestamp;"

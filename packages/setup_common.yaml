@@ -37,15 +37,15 @@ wifi:
     password: $wifi_password
   #use_address: $ip_address}
   #https://esphome.io/components/wifi.html#wifi-power-save-mode
-  power_save_mode: light
+  power_save_mode: none
   networks:
-  - ssid: $wifi_office_ssid
+  - ssid: $ssid1
     password: $wifi_password
-  - ssid:  $wifi_bedroom_ssid
+  - ssid:  $ssid2
     password: $wifi_password
-  - ssid: $wifi_dining_ssid
+  - ssid: $ssid3
     password: $wifi_password
-  - ssid: $wifi_entry_ssid
+  - ssid: $ssid4
     password: $wifi_password
 
 mdns:

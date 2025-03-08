@@ -68,16 +68,6 @@ sensor:
     loop_time:
       name: "HW: Loop Time"
 
-  # Template sensor for the last update timestamp
-  - platform: template
-    name: "Last Update Timestamp"
-    id: last_update_timestamp
-    lambda: |-
-      time_t now = id(global_time).now().timestamp;
-      return now;
-    update_interval: never
-    device_class: timestamp
-
 # Define text sensors for various diagnostic information
 text_sensor:
   - platform: git_ref
