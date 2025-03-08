@@ -81,23 +81,23 @@ sensor:
 # Define text sensors for various diagnostic information
 text_sensor:
   - platform: git_ref
-    internal: true
+    internal: false
     id: git_ref_id
-    name: "${friendly_name} Git Ref"
+    name: "$SW: Git Ref"
     long: true
     all: true
     abbrev: 16
     dirty: "-dirty"
 
   - platform: version
-    internal: true
+    internal: false
     id: esphome_version_id
-    name: "ESPHome Version"
+    name: "SW: ESPHome Version"
     hide_timestamp: true
 
   # ESPHome project version (detailed)
   - platform: template
-    name: "SW: Version"
+    name: "SW: Build Time"
     id: esphome_project_version_text_detailed
     icon: "mdi:information-box"
     entity_category: "diagnostic"
@@ -108,6 +108,18 @@ text_sensor:
         std::string("FW: ") + id(esphome_version_id).state + "\n" +
         std::string("Built: ") + App.get_compilation_time() + "\n" +
         id(git_ref_id).state
+      };
+
+  # ESPHome project version (detailed)
+  - platform: template
+    name: "SW: Build Time"
+    id: esphome_build_time
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return {
+        App.get_compilation_time()
       };
 
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
@@ -248,7 +260,6 @@ text_sensor:
     id: esp32_esphome_version
     entity_category: diagnostic
     icon: mdi:information-outline
-
   - platform: template
     name: "HW: Chip Model"
     id: esp32_chip_model
