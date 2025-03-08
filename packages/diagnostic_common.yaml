@@ -1,10 +1,10 @@
 # external_components:
-#   - source:
-#       type: git
-#       url: https://github.com/hellosamblack/esphome-configurations
-#       ref: main
-#     components: [ git_ref ]
-#     refresh: 0min
+#  - source:
+#      type: git
+#      url: https://github.com/hellosamblack/esphome-configurations
+#      ref: main
+#      components: [ git_ref ]
+#      refresh: 0min
 
 # Define buttons for various actions
 button:
@@ -16,7 +16,6 @@ button:
     disabled_by_default: True
     name: "ESP32 Factory Reset"
     id: factory_reset_all
-
     icon: mdi:delete
 
 # Define a switch for factory reset, used internally
@@ -30,6 +29,48 @@ debug:
   update_interval: 30s
   device:
     name: "ESP32 Info"
+    #Break out ESP32 info into separate sensors
+    on_value:
+      - lambda: |-
+          auto raw_value = x.c_str();
+          auto parts = std::vector<std::string>();
+          auto current = std::string();
+          for (auto c : raw_value) {
+            if (c == '|') {
+              parts.push_back(current);
+              current.clear();
+            } else {
+              current += c;
+            }
+          }
+          parts.push_back(current);
+
+          if (parts.size() >= 7) {
+            id(esp32_info_esphome_version).publish_state(parts[0].c_str());
+
+            auto chip_parts = std::vector<std::string>();
+            auto chip_current = std::string();
+            for (auto c : parts[1]) {
+              if (c == ' ') {
+                chip_parts.push_back(chip_current);
+                chip_current.clear();
+              } else {
+                chip_current += c;
+              }
+            }
+            chip_parts.push_back(chip_current);
+
+            id(esp32_info_chip_model).publish_state(chip_parts[1].substr(5).c_str());
+            id(esp32_info_chip_features).publish_state(chip_parts[2].substr(8).c_str());
+            id(esp32_info_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
+            id(esp32_info_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
+
+            id(esp32_info_framework).publish_state(parts[2].substr(11).c_str());
+            id(esp32_info_esp_idf_version).publish_state(parts[3].substr(9).c_str());
+            id(esp32_info_efuse_mac).publish_state(parts[4].substr(11).c_str());
+            id(esp32_info_reset_reason).publish_state(parts[5].substr(7).c_str());
+            id(esp32_info_wakeup_reason).publish_state(parts[6].substr(8).c_str());
+          }
 # Define a time platform to sync with Home Assistant
 time:
   - platform: homeassistant
@@ -129,7 +170,7 @@ text_sensor:
       name: WiFi Connected BSSID
     #This is already visible in the device info
     # mac_address:
-    #   name: Network MAC
+    #  name: Network MAC
     scan_results:
       name: WiFi SSIDs
     dns_address:
@@ -141,35 +182,33 @@ text_sensor:
       name: "ESP32 Info"
     reset_reason:
       name: "ESP32 Reset Reason"
-
   - platform: template
     name: "ESP32 Info ESPHome Version"
-    state: !lambda return x.c_str().split('|')[0].c_str();
+    id: esp32_info_esphome_version
   - platform: template
     name: "ESP32 Info Chip Model"
-    state: !lambda return x.c_str().split('|')[1].split("Chip: ")[1].split(" Features:")[0].c_str();
+    id: esp32_info_chip_model
   - platform: template
     name: "ESP32 Info Chip Features"
-    state: !lambda return x.c_str().split('|')[1].split("Features:")[1].split(" Cores:")[0].c_str();
+    id: esp32_info_chip_features
   - platform: template
     name: "ESP32 Info Chip Cores"
-    state: !lambda return x.c_str().split('|')[1].split("Cores:")[1].split(" Revision:")[0].c_str();
+    id: esp32_info_chip_cores
   - platform: template
     name: "ESP32 Info Chip Revision"
-    state: !lambda return x.c_str().split('|')[1].split("Revision:")[1].c_str();
+    id: esp32_info_chip_revision
   - platform: template
     name: "ESP32 Info Framework"
-    state: !lambda return x.c_str().split('|')[2].split("Framework: ")[1].c_str();
+    id: esp32_info_framework
   - platform: template
     name: "ESP32 Info ESP-IDF Version"
-    state: !lambda return x.c_str().split('|')[3].split("ESP-IDF: ")[1].c_str();
+    id: esp32_info_esp_idf_version
   - platform: template
     name: "ESP32 Info EFuse MAC"
-    state: !lambda return x.c_str().split('|')[4].split("EFuse MAC: ")[1].c_str();
+    id: esp32_info_efuse_mac
   - platform: template
     name: "ESP32 Info Reset Reason"
-    state: !lambda return x.c_str().split('|')[5].split("Reset: ")[1].c_str();
+    id: esp32_info_reset_reason
   - platform: template
     name: "ESP32 Info Wakeup Reason"
-    state: !lambda return x.c_str().split('|')[6].split("Wakeup: ")[1].c_str();
-
+    id: esp32_info_wakeup_reason
