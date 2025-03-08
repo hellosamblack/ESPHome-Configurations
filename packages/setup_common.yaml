@@ -4,7 +4,7 @@ esphome:
   area: $area
   project:
       name: SDB.$friendly_name
-      version: See "SW Version" sensor
+      #version: See "SW Version" sensor
 logger:
   #id: logger_id
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
