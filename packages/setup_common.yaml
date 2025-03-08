@@ -2,9 +2,6 @@ esphome:
   name: $device_name
   friendly_name: $friendly_name
   area: $area
-  # project:
-  #   name: $project_name
-  #   version: $project_version
 
 logger:
   #id: logger_id
