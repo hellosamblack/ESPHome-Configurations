@@ -104,7 +104,12 @@ text_sensor:
     entity_category: "diagnostic"
     update_interval: 600s
     lambda: |-
-      return { "FW: "+ ESPHOME_PROJECT_VERSION + "\n" + "Built: " + App.get_compilation_time() + "\n" + id(git_ref_id).state };
+      #include <string> // Add this line to include the string library
+      return {
+        std::string("FW: ") + ESPHOME_PROJECT_VERSION + "\n" +
+        std::string("Built: ") + App.get_compilation_time() + "\n" +
+        id(git_ref_id).state
+      };
 
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
