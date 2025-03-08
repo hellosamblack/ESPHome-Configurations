@@ -1,0 +1,48 @@
+substitutions:
+  device_name: sam-office-esphome-4
+  friendly_name: Sam Office ESPHome (4)
+  area: "Sam Office"
+  api_encryption_key: rCgVOIMQbg1CEqaPMv1a5Zi4UldHO3r0QZVXE/T4zUs=
+  ota_password: c3ea65dc688f7393958c55d6bf5ce0a3
+  ip_address: 172.17.2.39
+  wifi_password: !secret wifi_password
+  #wifi_ssid: !secret wifi_ssid
+  wifi_office_ssid: !secret wifi_office_ssid
+  wifi_bedroom_ssid: !secret wifi_bedroom_ssid
+  wifi_dining_ssid: !secret wifi_dining_ssid
+  wifi_entry_ssid: !secret wifi_entry_ssid 
+
+#dashboard_import: https://github.com/hellosamblack/esphome-configurations
+
+
+
+packages:
+  setup_common:
+    url: https://github.com/hellosamblack/esphome-configurations
+    ref: main
+    files: [packages/setup_common.yaml]
+    refresh: 0min
+  diagnostic_common:
+    url: https://github.com/hellosamblack/esphome-configurations
+    ref: main
+    files: [packages/diagnostic_common.yaml]
+    refresh: 0min
+  setup_esp32_c6:
+    url: https://github.com/hellosamblack/esphome-configurations
+    ref: main
+    files: [packages/setup_esp32_c6.yaml]
+    refresh: 0min
+  mr60bha2:
+    url: https://github.com/hellosamblack/esphome-configurations
+    ref: main
+    files: [packages/mr60bha2.yaml]
+    refresh: 0min
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/hellosamblack/esphome-configurations
+      ref: main
+    #components: [ git_ref ]
+    refresh: 0min
+#### CUSTOM CODE GOES HERE ####

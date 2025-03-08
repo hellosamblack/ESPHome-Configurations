@@ -1,11 +1,3 @@
-# external_components:
-#  - source:
-#      type: git
-#      url: https://github.com/hellosamblack/esphome-configurations
-#      ref: main
-#      components: [ git_ref ]
-#      refresh: 0min
-
 # Define buttons for various actions
 button:
   - platform: restart
@@ -14,7 +6,7 @@ button:
 
   - platform: factory_reset
     disabled_by_default: True
-    name: "ESP32 Factory Reset"
+    name: "Factory Reset"
     id: factory_reset_all
     icon: mdi:delete
 
@@ -39,12 +31,12 @@ sensor:
 
   # Internal temperature of the ESP
   - platform: internal_temperature
-    name: "ESP32 Temperature"
+    name: "HW: Temperature"
     id: sys_esp_temperature
 
   # WiFi signal strength in dB
   - platform: wifi_signal
-    name: "WiFi Signal dB"
+    name: "WiFi: Signal dB"
     id: wifi_signal_db
     unit_of_measurement: "dB"
     update_interval: 60s
@@ -54,7 +46,7 @@ sensor:
   # WiFi signal strength as a percentage
   - platform: copy
     source_id: wifi_signal_db
-    name: "WiFi Signal Strength"
+    name: "WiFi: Signal Strength"
     id: wifi_signal_strength
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
@@ -64,17 +56,17 @@ sensor:
 
   # Uptime of the device
   - platform: uptime
-    name: ESP32 Uptime
+    name: "Uptime"
     entity_category: "diagnostic"
 
   # Debug information about heap memory and loop time
   - platform: debug
     free:
-      name: "RAM Heap Free"
+      name: "HW: Heap Free"
     block:
-      name: "RAM Heap Max Block"
+      name: "HW: Heap Max Block"
     loop_time:
-      name: "ESP32 Loop Time"
+      name: "HW: Loop Time"
 
   # Template sensor for the last update timestamp
   - platform: template
@@ -89,6 +81,7 @@ sensor:
 # Define text sensors for various diagnostic information
 text_sensor:
   - platform: git_ref
+    internal: true
     id: git_ref_id
     name: "${friendly_name} Git Ref"
     long: true
@@ -103,7 +96,7 @@ text_sensor:
 
   # ESPHome project version (detailed)
   - platform: template
-    name: "SW Version"
+    name: "SW: Version"
     id: esphome_project_version_text_detailed
     icon: "mdi:information-box"
     entity_category: "diagnostic"
@@ -119,25 +112,26 @@ text_sensor:
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
     ip_address:
-      name: Network IP Address
+      name: "Network: IP Address"
       address_0:
-        name: Network IP Address
+        name: "Network: IP Address"
     ssid:
-      name: WiFi Connected SSID
+      name: "WiFi: SSID"
     bssid:
-      name: WiFi Connected BSSID
+      name: "WiFi: BSSID"
     #This is already visible in the device info
     # mac_address:
     #  name: Network MAC
     scan_results:
-      name: WiFi SSIDs
+      name: "WiFi: SSIDs"
     dns_address:
-      name: Network DNS Address
+      name: "Network: DNS Address"
 
   # Debug information about the device and reset reason
   - platform: debug
     device:
       name: "ESP32 Info"
+      internal: true
       on_value:
         - lambda: |-
             auto raw_value = x.c_str();
@@ -169,7 +163,34 @@ text_sensor:
               chip_parts.push_back(chip_current);
 
               id(esp32_chip_model).publish_state(parts[1].substr(6, parts[1].find(" Features:")-6).c_str());
-              id(esp32_chip_features).publish_state(chip_parts[2].substr(8).c_str());
+
+              // Process Chip Features
+              auto features_str = chip_parts[2].substr(8);
+              auto features = std::vector<std::string>();
+              auto feature_current = std::string();
+              for (int i = 0; i < features_str.length(); ++i) {
+                if (features_str[i] == ',') {
+                  features.push_back(feature_current);
+                  feature_current.clear();
+                } else if (features_str[i] == 'O') {
+                  break; // Stop at "Other"
+                } else {
+                  feature_current += features_str[i];
+                }
+              }
+              if (!feature_current.empty()) {
+                  features.push_back(feature_current);
+              }
+
+              auto formatted_features = std::string();
+              for (const auto& feature : features) {
+                formatted_features += feature + ", ";
+              }
+              if (formatted_features.length() > 2) {
+                formatted_features = formatted_features.substr(0, formatted_features.length() - 2); // Remove trailing comma and space
+              }
+              id(esp32_chip_features).publish_state(formatted_features.c_str());
+
               id(esp32_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
               id(esp32_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
 
@@ -180,54 +201,57 @@ text_sensor:
               id(esp32_wakeup_reason).publish_state(parts[6].substr(8).c_str());
             }
     reset_reason:
-      name: "ESP32 Reset Reason"
+      name: "Uptime: Reset Reason"
   - platform: template
-    name: "ESP32 ESPHome Version"
+    name: "SW: ESPHome Version"
+    internal: true
     id: esp32_esphome_version
     entity_category: diagnostic
     icon: mdi:information-outline
+
   - platform: template
-    name: "ESP32 Chip Model"
+    name: "HW: Chip Model"
     id: esp32_chip_model
     entity_category: diagnostic
     icon: mdi:chip
   - platform: template
-    name: "ESP32 Chip Features"
+    name: "HW: Chip Features"
     id: esp32_chip_features
     entity_category: diagnostic
     icon: mdi:feature-search-outline
   - platform: template
-    name: "ESP32 Chip Cores"
+    name: "HW: Chip Cores"
     id: esp32_chip_cores
     entity_category: diagnostic
     icon: mdi:cpu-32-bit
   - platform: template
-    name: "ESP32 Chip Revision"
+    name: "HW: Chip Revision"
     id: esp32_chip_revision
     entity_category: diagnostic
     icon: mdi:refresh-auto
   - platform: template
-    name: "ESP32 Framework"
+    name: "SW: Framework"
     id: esp32_framework
     entity_category: diagnostic
     icon: mdi:code-braces
   - platform: template
-    name: "ESP32 ESP-IDF Version"
+    name: "SW: ESP-IDF Version"
     id: esp32_esp_idf_version
     entity_category: diagnostic
     icon: mdi:code-braces
   - platform: template
+    internal: true
     name: "ESP32 EFuse MAC"
     id: esp32_efuse_mac
     entity_category: diagnostic
     icon: mdi:ethernet-mac
   - platform: template
-    name: "ESP32 Reset Reason"
+    name: "Uptime: Reset Reason"
     id: esp32_reset_reason
     entity_category: diagnostic
     icon: mdi:restart
   - platform: template
-    name: "ESP32 Wakeup Reason"
+    name: "Uptime: Wakeup Reason"
     id: esp32_wakeup_reason
     entity_category: diagnostic
     icon: mdi:power-sleep
