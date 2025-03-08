@@ -89,7 +89,7 @@ light:
           update_interval: 1s
           lambda: |-
             if (id(person_detected_raw).state) {
-              float distance_var = id(distance).state;
+              float distance_var = id(distance_id).state;
               float brightness = (distance_var / 10.0) * 89.0 + 11.0; // Map distance 0-10 to brightness 11-100
               int red = (int)(255 * (1 - (distance_var / 10.0))); // Red decreases as distance increases
               int green = (int)(255 * (distance_var / 10.0)); // Green increases as distance increases
@@ -110,7 +110,7 @@ sensor:
     update_interval: 1s
     accuracy_decimals: 0
     device_class: illuminance
-    id: illuminance
+    id: illuminance_id
     state_class: measurement
     filters:
         - or: 
@@ -126,7 +126,7 @@ sensor:
   - platform: sam_seeed_mr60bha2
     breath_rate:
       name: "Respiratory Rate"
-      id: respiratory_rate
+      id: respiratory_rate_id
       state_class: measurement
       filters:
         - exponential_moving_average:
@@ -142,7 +142,7 @@ sensor:
                 state: !lambda "return id(global_time).now().timestamp;"
     heart_rate:
       name: "Heart Rate"
-      id: heart_rate
+      id: heart_rate_id
       state_class: measurement
       accuracy_decimals: 0
       filters:
@@ -159,7 +159,7 @@ sensor:
               state: !lambda "return id(global_time).now().timestamp;"
     distance:
       name: "Distance"
-      id: distance
+      id: distance_id
       unit_of_measurement: ft
       accuracy_decimals: 1
       filters:
@@ -174,7 +174,7 @@ sensor:
                 state: !lambda "return id(global_time).now().timestamp;"
     num_targets:
       name: "Number of Targets"
-      id: number_of_targets
+      id: number_of_targets_id
       unit_of_measurement: "People"
       state_class: measurement
       accuracy_decimals: 0
