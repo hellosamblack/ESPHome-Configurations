@@ -96,6 +96,11 @@ text_sensor:
     abbrev: 16
     dirty: "-dirty"
 
+  - platform: version
+    id: esphome_version_id
+    name: "ESPHome Version"
+    hide_timestamp: true
+
   # ESPHome project version (detailed)
   - platform: template
     name: "SW Version"
@@ -106,7 +111,7 @@ text_sensor:
     lambda: |-
       #include <string> // Add this line to include the string library
       return {
-        std::string("FW: ") + ESPHOME_PROJECT_VERSION + "\n" +
+        std::string("FW: ") + id(esphome_version_id).state + "\n" +
         std::string("Built: ") + App.get_compilation_time() + "\n" +
         id(git_ref_id).state
       };
