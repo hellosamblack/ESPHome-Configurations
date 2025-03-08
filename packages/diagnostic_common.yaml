@@ -165,7 +165,7 @@ text_sensor:
               id(esp32_chip_model).publish_state(parts[1].substr(6, parts[1].find(" Features:")-6).c_str());
 
               // Process Chip Features
-              auto features_str = chip_parts[2].substr(8);
+              auto features_str = chip_parts[2].substr(9); // Skip the colon
               auto features = std::vector<std::string>();
               auto feature_current = std::string();
               for (int i = 0; i < features_str.length(); ++i) {
