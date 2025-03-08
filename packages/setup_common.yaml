@@ -2,10 +2,10 @@ esphome:
   name: $device_name
   friendly_name: $friendly_name
   area: $area
-  project:
-    name: $project_name
-    version: !lambda |-
-      return "FW: " + std::string(ESPHOME_PROJECT_VERSION) + "\n" + "Built: " + std::string(App.get_compilation_time());
+  # project:
+  #   name: $project_name
+  #   version: $project_version
+
 logger:
   #id: logger_id
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
