@@ -1,3 +1,11 @@
+external_components:
+  - source:
+      type: git
+      url: https://github.com/hellosamblack/esphome-configurations
+      ref: main
+    components: [ git_ref ]
+    refresh: 0min
+
 # Define buttons for various actions
 button:
   - platform: restart
@@ -80,6 +88,14 @@ sensor:
 
 # Define text sensors for various diagnostic information
 text_sensor:
+  - platform: git_ref
+    id: git_ref
+    name: "${friendly_name} Git Ref"
+    long: true
+    all: true
+    abbrev: 16
+    dirty: "-dirty"
+
   # ESPHome project version (detailed)
   - platform: template
     name: "SW Version"
@@ -88,7 +104,7 @@ text_sensor:
     entity_category: "diagnostic"
     update_interval: 600s
     lambda: |-
-      return { "FW: "+ ESPHOME_PROJECT_VERSION "\n" + "Built: " + App.get_compilation_time() };
+      return { "FW: "+ ESPHOME_PROJECT_VERSION + "\n" + "Built: " + App.get_compilation_time() + "\n" + id(git_ref).state };
 
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
