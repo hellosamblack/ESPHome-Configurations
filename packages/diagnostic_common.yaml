@@ -138,47 +138,47 @@ text_sensor:
   - platform: debug
     device:
       name: "ESP32 Info"
-    on_value:
-      - lambda: |-
-          auto raw_value = x.c_str();
-          auto parts = std::vector<std::string>();
-          auto current = std::string();
-          for (int i = 0; raw_value[i] != '\0'; ++i) {
-            if (raw_value[i] == '|') {
-              parts.push_back(current);
-              current.clear();
-            } else {
-              current += raw_value[i];
-            }
-          }
-          parts.push_back(current);
-
-          if (parts.size() >= 7) {
-            id(esp32_info_esphome_version).publish_state(parts[0].c_str());
-
-            auto chip_parts = std::vector<std::string>();
-            auto chip_current = std::string();
-            for (int i = 0; i < parts[1].length(); ++i) {
-              if (parts[1][i] == ' ') {
-                chip_parts.push_back(chip_current);
-                chip_current.clear();
+      on_value:
+        - lambda: |-
+            auto raw_value = x.c_str();
+            auto parts = std::vector<std::string>();
+            auto current = std::string();
+            for (int i = 0; raw_value[i] != '\0'; ++i) {
+              if (raw_value[i] == '|') {
+                parts.push_back(current);
+                current.clear();
               } else {
-                chip_current += parts[1][i];
+                current += raw_value[i];
               }
             }
-            chip_parts.push_back(chip_current);
+            parts.push_back(current);
 
-            id(esp32_info_chip_model).publish_state(chip_parts[1].substr(5).c_str());
-            id(esp32_info_chip_features).publish_state(chip_parts[2].substr(8).c_str());
-            id(esp32_info_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
-            id(esp32_info_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
+            if (parts.size() >= 7) {
+              id(esp32_info_esphome_version).publish_state(parts[0].c_str());
 
-            id(esp32_info_framework).publish_state(parts[2].substr(11).c_str());
-            id(esp32_info_esp_idf_version).publish_state(parts[3].substr(9).c_str());
-            id(esp32_info_efuse_mac).publish_state(parts[4].substr(11).c_str());
-            id(esp32_info_reset_reason).publish_state(parts[5].substr(7).c_str());
-            id(esp32_info_wakeup_reason).publish_state(parts[6].substr(8).c_str());
-          }
+              auto chip_parts = std::vector<std::string>();
+              auto chip_current = std::string();
+              for (int i = 0; i < parts[1].length(); ++i) {
+                if (parts[1][i] == ' ') {
+                  chip_parts.push_back(chip_current);
+                  chip_current.clear();
+                } else {
+                  chip_current += parts[1][i];
+                }
+              }
+              chip_parts.push_back(chip_current);
+
+              id(esp32_info_chip_model).publish_state(chip_parts[1].substr(5).c_str());
+              id(esp32_info_chip_features).publish_state(chip_parts[2].substr(8).c_str());
+              id(esp32_info_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
+              id(esp32_info_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
+
+              id(esp32_info_framework).publish_state(parts[2].substr(11).c_str());
+              id(esp32_info_esp_idf_version).publish_state(parts[3].substr(9).c_str());
+              id(esp32_info_efuse_mac).publish_state(parts[4].substr(11).c_str());
+              id(esp32_info_reset_reason).publish_state(parts[5].substr(7).c_str());
+              id(esp32_info_wakeup_reason).publish_state(parts[6].substr(8).c_str());
+            }
     reset_reason:
       name: "ESP32 Reset Reason"
   - platform: template
