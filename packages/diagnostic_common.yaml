@@ -28,7 +28,8 @@ switch:
 # Enable debug logging with an update interval of 30 seconds
 debug:
   update_interval: 30s
-
+  device:
+    name: "ESP32 Info"
 # Define a time platform to sync with Home Assistant
 time:
   - platform: homeassistant
@@ -126,8 +127,9 @@ text_sensor:
       name: WiFi Connected SSID
     bssid:
       name: WiFi Connected BSSID
-    mac_address:
-      name: Network MAC
+    #This is already visible in the device info
+    # mac_address:
+    #   name: Network MAC
     scan_results:
       name: WiFi SSIDs
     dns_address:
@@ -139,3 +141,27 @@ text_sensor:
       name: "ESP32 Info"
     reset_reason:
       name: "ESP32 Reset Reason"
+
+
+template:
+  - sensor:
+      - name: "ESP32 Info ESPHome Version"
+        state: !lambda return x.c_str().split('|')[0].c_str();
+      - name: "ESP32 Info Chip Model"
+        state: !lambda return x.c_str().split('|')[1].split("Chip: ")[1].split(" Features:")[0].c_str();
+      - name: "ESP32 Info Chip Features"
+        state: !lambda return x.c_str().split('|')[1].split("Features:")[1].split(" Cores:")[0].c_str();
+      - name: "ESP32 Info Chip Cores"
+        state: !lambda return x.c_str().split('|')[1].split("Cores:")[1].split(" Revision:")[0].c_str();
+      - name: "ESP32 Info Chip Revision"
+        state: !lambda return x.c_str().split('|')[1].split("Revision:")[1].c_str();
+      - name: "ESP32 Info Framework"
+        state: !lambda return x.c_str().split('|')[2].split("Framework: ")[1].c_str();
+      - name: "ESP32 Info ESP-IDF Version"
+        state: !lambda return x.c_str().split('|')[3].split("ESP-IDF: ")[1].c_str();
+      - name: "ESP32 Info EFuse MAC"
+        state: !lambda return x.c_str().split('|')[4].split("EFuse MAC: ")[1].c_str();
+      - name: "ESP32 Info Reset Reason"
+        state: !lambda return x.c_str().split('|')[5].split("Reset: ")[1].c_str();
+      - name: "ESP32 Info Wakeup Reason"
+        state: !lambda return x.c_str().split('|')[6].split("Wakeup: ")[1].c_str();

@@ -3,7 +3,7 @@ esphome:
   friendly_name: $friendly_name
   area: $area
   project:
-      name: SDB.$friendly_name
+      name: hellosamblack.$friendly_name
       version: ""
 logger:
   #id: logger_id
