@@ -92,25 +92,10 @@ text_sensor:
   - platform: version
     internal: false
     id: esphome_version_id
-    name: "SW: ESPHome Version"
+    name: "SW: ESP"
     hide_timestamp: true
 
-  # ESPHome project version (detailed)
-  - platform: template
-    name: "SW: Build Time"
-    id: esphome_project_version_text_detailed
-    icon: "mdi:information-box"
-    entity_category: "diagnostic"
-    update_interval: 600s
-    lambda: |-
-      #include <string> // Add this line to include the string library
-      return {
-        std::string("FW: ") + id(esphome_version_id).state + "\n" +
-        std::string("Built: ") + App.get_compilation_time() + "\n" +
-        id(git_ref_id).state
-      };
-
-  # ESPHome project version (detailed)
+  # ESPHome Build Time
   - platform: template
     name: "SW: Build Time"
     id: esphome_build_time
