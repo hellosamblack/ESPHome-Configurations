@@ -31,11 +31,13 @@ binary_sensor:
     lambda: |-
       static float last_distance = 0;
       static uint32_t last_change = 0;
+      // Check if the distance has changed
       if (id(distance).state != last_distance) {
         last_distance = id(distance).state;
         last_change = id(global_time).now().timestamp;
       }
-      return (id(global_time).now().timestamp - last_change) > 600;
+      // Return true if the distance hasn't changed for more than 600 seconds and person_detected_raw is true
+      return (id(global_time).now().timestamp - last_change) > 600 && id(person_detected_raw).state;
     device_class: problem
 
   - platform: template
