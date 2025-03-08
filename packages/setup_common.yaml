@@ -41,19 +41,19 @@ wifi:
   networks:
   - ssid: $ssid1
     password: $wifi_password
-    priotity: 1
+    priority: 1
   - ssid:  $ssid2
     password: $wifi_password
-    priotity: 1
+    priority: 1
   - ssid: $ssid3
     password: $wifi_password
-    priotity: 1
+    priority: 1
   - ssid: $ssid4
     password: $wifi_password
-    priotity: 1
+    priority: 1
   - ssid: $ssid_fallback
     password: $wifi_password
-    priotity: 0
+    priority: 0
 
 mdns:
   disabled: false
