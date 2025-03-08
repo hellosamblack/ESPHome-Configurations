@@ -134,257 +134,257 @@ text_sensor:
       name: "ESP32 Info"
       internal: true
       on_value:
-      - lambda: |-
-          auto raw_value = x.c_str();
-          auto parts = std::vector<std::string>();
-          auto current = std::string();
-          for (int i = 0; raw_value[i] != '\0'; ++i) {
-            if (raw_value[i] == '|') {
+        - lambda: |-
+            auto raw_value = x.c_str();
+            auto parts = std::vector<std::string>();
+            auto current = std::string();
+            for (int i = 0; raw_value[i] != '\0'; ++i) {
+              if (raw_value[i] == '|') {
+                parts.push_back(current);
+                current.clear();
+              } else {
+                current += raw_value[i];
+              }
+            }
+            parts.push_back(current);
+
+            if (parts.size() >= 7) {
+              id(esp32_esphome_version).publish_state(parts[0].c_str());
+
+              // Find the chip info part
+              int chip_info_index = -1;
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("Chip:") != std::string::npos){
+                  chip_info_index = i;
+                  break;
+                }
+              }
+
+              if(chip_info_index != -1){
+                // Chip Model
+                auto chip_model_start = parts[chip_info_index].find("Chip: ");
+                if (chip_model_start != std::string::npos) {
+                  auto chip_model_end = parts[chip_info_index].find(" Features:", chip_model_start);
+                  if (chip_model_end != std::string::npos) {
+                    id(esp32_chip_model).publish_state(parts[chip_info_index].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
+                  }
+                }
+
+                // Chip Features
+                auto features_start = parts[chip_info_index].find("Features:");
+                if (features_start != std::string::npos) {
+                  auto features_end = parts[chip_info_index].find(" Cores:", features_start);
+                  if (features_end != std::string::npos) {
+                    auto features_str = parts[chip_info_index].substr(features_start + 9, features_end - features_start - 9);
+                    auto features = std::vector<std::string>();
+                    auto feature_current = std::string();
+                    for (int i = 0; i < features_str.length(); ++i) {
+                      if (features_str[i] == ',') {
+                        features.push_back(feature_current);
+                        feature_current.clear();
+                      } else if (features_str[i] == 'O') {
+                        break;
+                      } else {
+                        feature_current += features_str[i];
+                      }
+                    }
+                    if (!feature_current.empty()) {
+                      features.push_back(feature_current);
+                    }
+
+                    auto formatted_features = std::string();
+                    for (const auto& feature : features) {
+                      formatted_features += feature + ", ";
+                    }
+                    if (formatted_features.length() > 2) {
+                      formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
+                    }
+                    id(esp32_chip_features).publish_state(formatted_features.c_str());
+                  }
+                }
+
+                // Chip Cores
+                auto cores_start = parts[chip_info_index].find("Cores:");
+                if (cores_start != std::string::npos) {
+                  auto cores_end = parts[chip_info_index].find(" Revision:", cores_start);
+                  if (cores_end != std::string::npos) {
+                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
+                  } else {
+                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6).c_str());
+                  }
+                }
+
+                // Chip Revision
+                auto revision_start = parts[chip_info_index].find("Revision:");
+                if (revision_start != std::string::npos) {
+                  id(esp32_chip_revision).publish_state(parts[chip_info_index].substr(revision_start + 9).c_str());
+                } else {
+                    id(esp32_chip_revision).publish_state("Unknown");
+                }
+              }
+
+              //Framework
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("Framework:") != std::string::npos){
+                  id(esp32_framework).publish_state(parts[i].substr(parts[i].find("Framework:")+11).c_str());
+                }
+              }
+              //ESP-IDF
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("ESP-IDF:") != std::string::npos){
+                  id(esp32_esp_idf_version).publish_state(parts[i].substr(parts[i].find("ESP-IDF:")+9).c_str());
+                }
+              }
+
+              id(esp32_efuse_mac).publish_state(parts[parts.size()-3].substr(11).c_str());
+              id(esp32_reset_reason).publish_state(parts[parts.size()-2].substr(7).c_str());
+              id(esp32_wakeup_reason).publish_state(parts[parts.size()-1].substr(8).c_str());
+            }
+          - lambda: |-
+              auto raw_value = x.c_str();
+              auto parts = std::vector<std::string>();
+              auto current = std::string();
+              for (int i = 0; raw_value[i] != '\0'; ++i) {
+                if (raw_value[i] == '|') {
+                  parts.push_back(current);
+                  current.clear();
+                } else {
+                  current += raw_value[i];
+                }
+              }
               parts.push_back(current);
-              current.clear();
-            } else {
-              current += raw_value[i];
-            }
-          }
-          parts.push_back(current);
 
-          if (parts.size() >= 7) {
-            id(esp32_esphome_version).publish_state(parts[0].c_str());
+              if (parts.size() >= 7) {
+                id(esp32_esphome_version).publish_state(parts[0].c_str());
 
-            // Find the chip info part
-            int chip_info_index = -1;
-            for(int i = 1; i < parts.size(); i++){
-              if(parts[i].find("Chip:") != std::string::npos){
-                chip_info_index = i;
-                break;
-              }
-            }
-
-            if(chip_info_index != -1){
-              // Chip Model
-              auto chip_model_start = parts[chip_info_index].find("Chip: ");
-              if (chip_model_start != std::string::npos) {
-                auto chip_model_end = parts[chip_info_index].find(" Features:", chip_model_start);
-                if (chip_model_end != std::string::npos) {
-                  id(esp32_chip_model).publish_state(parts[chip_info_index].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
+                // Chip Model
+                auto chip_model_start = parts[2].find("Chip: ");
+                if (chip_model_start != std::string::npos) {
+                  auto chip_model_end = parts[2].find(" Features:", chip_model_start);
+                  if (chip_model_end != std::string::npos) {
+                    id(esp32_chip_model).publish_state(parts[2].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
+                  }
                 }
-              }
 
-              // Chip Features
-              auto features_start = parts[chip_info_index].find("Features:");
-              if (features_start != std::string::npos) {
-                auto features_end = parts[chip_info_index].find(" Cores:", features_start);
-                if (features_end != std::string::npos) {
-                  auto features_str = parts[chip_info_index].substr(features_start + 9, features_end - features_start - 9);
-                  auto features = std::vector<std::string>();
-                  auto feature_current = std::string();
-                  for (int i = 0; i < features_str.length(); ++i) {
-                    if (features_str[i] == ',') {
-                      features.push_back(feature_current);
-                      feature_current.clear();
-                    } else if (features_str[i] == 'O') {
-                      break;
-                    } else {
-                      feature_current += features_str[i];
+                // Chip Features
+                auto features_start = parts[2].find("Features:");
+                if (features_start != std::string::npos) {
+                  auto features_end = parts[2].find(" Cores:", features_start);
+                  if (features_end != std::string::npos) {
+                    auto features_str = parts[2].substr(features_start + 9, features_end - features_start - 9);
+                    auto features = std::vector<std::string>();
+                    auto feature_current = std::string();
+                    for (int i = 0; i < features_str.length(); ++i) {
+                      if (features_str[i] == ',') {
+                        features.push_back(feature_current);
+                        feature_current.clear();
+                      } else {
+                        feature_current += features_str[i];
+                      }
                     }
-                  }
-                  if (!feature_current.empty()) {
-                    features.push_back(feature_current);
-                  }
-
-                  auto formatted_features = std::string();
-                  for (const auto& feature : features) {
-                    formatted_features += feature + ", ";
-                  }
-                  if (formatted_features.length() > 2) {
-                    formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
-                  }
-                  id(esp32_chip_features).publish_state(formatted_features.c_str());
-                }
-              }
-
-              // Chip Cores
-              auto cores_start = parts[chip_info_index].find("Cores:");
-              if (cores_start != std::string::npos) {
-                auto cores_end = parts[chip_info_index].find(" Revision:", cores_start);
-                if (cores_end != std::string::npos) {
-                  id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
-                } else {
-                  id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6).c_str());
-                }
-              }
-
-              // Chip Revision
-              auto revision_start = parts[chip_info_index].find("Revision:");
-              if (revision_start != std::string::npos) {
-                id(esp32_chip_revision).publish_state(parts[chip_info_index].substr(revision_start + 9).c_str());
-              } else {
-                  id(esp32_chip_revision).publish_state("Unknown");
-              }
-            }
-
-            //Framework
-            for(int i = 1; i < parts.size(); i++){
-              if(parts[i].find("Framework:") != std::string::npos){
-                id(esp32_framework).publish_state(parts[i].substr(parts[i].find("Framework:")+11).c_str());
-              }
-            }
-            //ESP-IDF
-            for(int i = 1; i < parts.size(); i++){
-              if(parts[i].find("ESP-IDF:") != std::string::npos){
-                id(esp32_esp_idf_version).publish_state(parts[i].substr(parts[i].find("ESP-IDF:")+9).c_str());
-              }
-            }
-
-            id(esp32_efuse_mac).publish_state(parts[parts.size()-3].substr(11).c_str());
-            id(esp32_reset_reason).publish_state(parts[parts.size()-2].substr(7).c_str());
-            id(esp32_wakeup_reason).publish_state(parts[parts.size()-1].substr(8).c_str());
-          }
-        - lambda: |-
-            auto raw_value = x.c_str();
-            auto parts = std::vector<std::string>();
-            auto current = std::string();
-            for (int i = 0; raw_value[i] != '\0'; ++i) {
-              if (raw_value[i] == '|') {
-                parts.push_back(current);
-                current.clear();
-              } else {
-                current += raw_value[i];
-              }
-            }
-            parts.push_back(current);
-
-            if (parts.size() >= 7) {
-              id(esp32_esphome_version).publish_state(parts[0].c_str());
-
-              // Chip Model
-              auto chip_model_start = parts[2].find("Chip: ");
-              if (chip_model_start != std::string::npos) {
-                auto chip_model_end = parts[2].find(" Features:", chip_model_start);
-                if (chip_model_end != std::string::npos) {
-                  id(esp32_chip_model).publish_state(parts[2].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
-                }
-              }
-
-              // Chip Features
-              auto features_start = parts[2].find("Features:");
-              if (features_start != std::string::npos) {
-                auto features_end = parts[2].find(" Cores:", features_start);
-                if (features_end != std::string::npos) {
-                  auto features_str = parts[2].substr(features_start + 9, features_end - features_start - 9);
-                  auto features = std::vector<std::string>();
-                  auto feature_current = std::string();
-                  for (int i = 0; i < features_str.length(); ++i) {
-                    if (features_str[i] == ',') {
+                    if (!feature_current.empty()) {
                       features.push_back(feature_current);
-                      feature_current.clear();
-                    } else {
-                      feature_current += features_str[i];
                     }
+
+                    auto formatted_features = std::string();
+                    for (const auto& feature : features) {
+                      formatted_features += feature + ", ";
+                    }
+                    if (formatted_features.length() > 2) {
+                      formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
+                    }
+                    id(esp32_chip_features).publish_state(formatted_features.c_str());
                   }
-                  if (!feature_current.empty()) {
+                }
+
+                // Chip Cores
+                auto cores_start = parts[2].find("Cores:");
+                if (cores_start != std::string::npos) {
+                  auto cores_end = parts[2].find(" Revision:", cores_start);
+                  if (cores_end != std::string::npos) {
+                    id(esp32_chip_cores).publish_state(parts[2].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
+                  }
+                }
+
+                // Chip Revision
+                auto revision_start = parts[2].find("Revision:");
+                if (revision_start != std::string::npos) {
+                  id(esp32_chip_revision).publish_state(parts[2].substr(revision_start + 9).c_str());
+                }
+
+                id(esp32_framework).publish_state(parts[3].substr(11).c_str());
+                id(esp32_esp_idf_version).publish_state(parts[4].substr(9).c_str());
+                id(esp32_efuse_mac).publish_state(parts[5].substr(11).c_str());
+                id(esp32_reset_reason).publish_state(parts[6].substr(7).c_str());
+                id(esp32_wakeup_reason).publish_state(parts[7].substr(8).c_str());
+              }
+          - lambda: |-
+              auto raw_value = x.c_str();
+              auto parts = std::vector<std::string>();
+              auto current = std::string();
+              for (int i = 0; raw_value[i] != '\0'; ++i) {
+                if (raw_value[i] == '|') {
+                  parts.push_back(current);
+                  current.clear();
+                } else {
+                  current += raw_value[i];
+                }
+              }
+              parts.push_back(current);
+
+              if (parts.size() >= 7) {
+                id(esp32_esphome_version).publish_state(parts[0].c_str());
+
+                auto chip_parts = std::vector<std::string>();
+                auto chip_current = std::string();
+                for (int i = 0; i < parts[1].length(); ++i) {
+                  if (parts[1][i] == ' ') {
+                    chip_parts.push_back(chip_current);
+                    chip_current.clear();
+                  } else {
+                    chip_current += parts[1][i];
+                  }
+                }
+                chip_parts.push_back(chip_current);
+
+                id(esp32_chip_model).publish_state(parts[1].substr(6, parts[1].find(" Features:")-6).c_str());
+
+                // Process Chip Features
+                auto features_str = chip_parts[2].substr(9); // Skip the colon
+                auto features = std::vector<std::string>();
+                auto feature_current = std::string();
+                for (int i = 0; i < features_str.length(); ++i) {
+                  if (features_str[i] == ',') {
                     features.push_back(feature_current);
+                    feature_current.clear();
+                  } else if (features_str[i] == 'O') {
+                    break; // Stop at "Other"
+                  } else {
+                    feature_current += features_str[i];
                   }
-
-                  auto formatted_features = std::string();
-                  for (const auto& feature : features) {
-                    formatted_features += feature + ", ";
-                  }
-                  if (formatted_features.length() > 2) {
-                    formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
-                  }
-                  id(esp32_chip_features).publish_state(formatted_features.c_str());
                 }
-              }
-
-              // Chip Cores
-              auto cores_start = parts[2].find("Cores:");
-              if (cores_start != std::string::npos) {
-                auto cores_end = parts[2].find(" Revision:", cores_start);
-                if (cores_end != std::string::npos) {
-                  id(esp32_chip_cores).publish_state(parts[2].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
+                if (!feature_current.empty()) {
+                    features.push_back(feature_current);
                 }
-              }
 
-              // Chip Revision
-              auto revision_start = parts[2].find("Revision:");
-              if (revision_start != std::string::npos) {
-                id(esp32_chip_revision).publish_state(parts[2].substr(revision_start + 9).c_str());
-              }
-
-              id(esp32_framework).publish_state(parts[3].substr(11).c_str());
-              id(esp32_esp_idf_version).publish_state(parts[4].substr(9).c_str());
-              id(esp32_efuse_mac).publish_state(parts[5].substr(11).c_str());
-              id(esp32_reset_reason).publish_state(parts[6].substr(7).c_str());
-              id(esp32_wakeup_reason).publish_state(parts[7].substr(8).c_str());
-            }
-        - lambda: |-
-            auto raw_value = x.c_str();
-            auto parts = std::vector<std::string>();
-            auto current = std::string();
-            for (int i = 0; raw_value[i] != '\0'; ++i) {
-              if (raw_value[i] == '|') {
-                parts.push_back(current);
-                current.clear();
-              } else {
-                current += raw_value[i];
-              }
-            }
-            parts.push_back(current);
-
-            if (parts.size() >= 7) {
-              id(esp32_esphome_version).publish_state(parts[0].c_str());
-
-              auto chip_parts = std::vector<std::string>();
-              auto chip_current = std::string();
-              for (int i = 0; i < parts[1].length(); ++i) {
-                if (parts[1][i] == ' ') {
-                  chip_parts.push_back(chip_current);
-                  chip_current.clear();
-                } else {
-                  chip_current += parts[1][i];
+                auto formatted_features = std::string();
+                for (const auto& feature : features) {
+                  formatted_features += feature + ", ";
                 }
-              }
-              chip_parts.push_back(chip_current);
-
-              id(esp32_chip_model).publish_state(parts[1].substr(6, parts[1].find(" Features:")-6).c_str());
-
-              // Process Chip Features
-              auto features_str = chip_parts[2].substr(9); // Skip the colon
-              auto features = std::vector<std::string>();
-              auto feature_current = std::string();
-              for (int i = 0; i < features_str.length(); ++i) {
-                if (features_str[i] == ',') {
-                  features.push_back(feature_current);
-                  feature_current.clear();
-                } else if (features_str[i] == 'O') {
-                  break; // Stop at "Other"
-                } else {
-                  feature_current += features_str[i];
+                if (formatted_features.length() > 2) {
+                  formatted_features = formatted_features.substr(0, formatted_features.length() - 2); // Remove trailing comma and space
                 }
-              }
-              if (!feature_current.empty()) {
-                  features.push_back(feature_current);
-              }
+                id(esp32_chip_features).publish_state(formatted_features.c_str());
 
-              auto formatted_features = std::string();
-              for (const auto& feature : features) {
-                formatted_features += feature + ", ";
-              }
-              if (formatted_features.length() > 2) {
-                formatted_features = formatted_features.substr(0, formatted_features.length() - 2); // Remove trailing comma and space
-              }
-              id(esp32_chip_features).publish_state(formatted_features.c_str());
+                id(esp32_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
+                id(esp32_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
 
-              id(esp32_chip_cores).publish_state(chip_parts[3].substr(6).c_str());
-              id(esp32_chip_revision).publish_state(chip_parts[4].substr(9).c_str());
-
-              id(esp32_framework).publish_state(parts[2].substr(11).c_str());
-              id(esp32_esp_idf_version).publish_state(parts[3].substr(9).c_str());
-              id(esp32_efuse_mac).publish_state(parts[4].substr(11).c_str());
-              id(esp32_reset_reason).publish_state(parts[5].substr(7).c_str());
-              id(esp32_wakeup_reason).publish_state(parts[6].substr(8).c_str());
-            }
+                id(esp32_framework).publish_state(parts[2].substr(11).c_str());
+                id(esp32_esp_idf_version).publish_state(parts[3].substr(9).c_str());
+                id(esp32_efuse_mac).publish_state(parts[4].substr(11).c_str());
+                id(esp32_reset_reason).publish_state(parts[5].substr(7).c_str());
+                id(esp32_wakeup_reason).publish_state(parts[6].substr(8).c_str());
+              }
     reset_reason:
       name: "Uptime: Reset Reason"
   - platform: template
