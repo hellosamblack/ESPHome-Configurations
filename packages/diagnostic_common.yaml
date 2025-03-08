@@ -83,7 +83,7 @@ text_sensor:
   - platform: git_ref
     internal: false
     id: git_ref_id
-    name: "$SW: Git Ref"
+    name: "SW: Git Ref"
     long: true
     all: true
     abbrev: 16
