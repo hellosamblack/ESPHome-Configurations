@@ -142,26 +142,34 @@ text_sensor:
     reset_reason:
       name: "ESP32 Reset Reason"
 
+  - platform: template
+    name: "ESP32 Info ESPHome Version"
+    state: !lambda return x.c_str().split('|')[0].c_str();
+  - platform: template
+    name: "ESP32 Info Chip Model"
+    state: !lambda return x.c_str().split('|')[1].split("Chip: ")[1].split(" Features:")[0].c_str();
+  - platform: template
+    name: "ESP32 Info Chip Features"
+    state: !lambda return x.c_str().split('|')[1].split("Features:")[1].split(" Cores:")[0].c_str();
+  - platform: template
+    name: "ESP32 Info Chip Cores"
+    state: !lambda return x.c_str().split('|')[1].split("Cores:")[1].split(" Revision:")[0].c_str();
+  - platform: template
+    name: "ESP32 Info Chip Revision"
+    state: !lambda return x.c_str().split('|')[1].split("Revision:")[1].c_str();
+  - platform: template
+    name: "ESP32 Info Framework"
+    state: !lambda return x.c_str().split('|')[2].split("Framework: ")[1].c_str();
+  - platform: template
+    name: "ESP32 Info ESP-IDF Version"
+    state: !lambda return x.c_str().split('|')[3].split("ESP-IDF: ")[1].c_str();
+  - platform: template
+    name: "ESP32 Info EFuse MAC"
+    state: !lambda return x.c_str().split('|')[4].split("EFuse MAC: ")[1].c_str();
+  - platform: template
+    name: "ESP32 Info Reset Reason"
+    state: !lambda return x.c_str().split('|')[5].split("Reset: ")[1].c_str();
+  - platform: template
+    name: "ESP32 Info Wakeup Reason"
+    state: !lambda return x.c_str().split('|')[6].split("Wakeup: ")[1].c_str();
 
-template:
-  - sensor:
-      - name: "ESP32 Info ESPHome Version"
-        state: !lambda return x.c_str().split('|')[0].c_str();
-      - name: "ESP32 Info Chip Model"
-        state: !lambda return x.c_str().split('|')[1].split("Chip: ")[1].split(" Features:")[0].c_str();
-      - name: "ESP32 Info Chip Features"
-        state: !lambda return x.c_str().split('|')[1].split("Features:")[1].split(" Cores:")[0].c_str();
-      - name: "ESP32 Info Chip Cores"
-        state: !lambda return x.c_str().split('|')[1].split("Cores:")[1].split(" Revision:")[0].c_str();
-      - name: "ESP32 Info Chip Revision"
-        state: !lambda return x.c_str().split('|')[1].split("Revision:")[1].c_str();
-      - name: "ESP32 Info Framework"
-        state: !lambda return x.c_str().split('|')[2].split("Framework: ")[1].c_str();
-      - name: "ESP32 Info ESP-IDF Version"
-        state: !lambda return x.c_str().split('|')[3].split("ESP-IDF: ")[1].c_str();
-      - name: "ESP32 Info EFuse MAC"
-        state: !lambda return x.c_str().split('|')[4].split("EFuse MAC: ")[1].c_str();
-      - name: "ESP32 Info Reset Reason"
-        state: !lambda return x.c_str().split('|')[5].split("Reset: ")[1].c_str();
-      - name: "ESP32 Info Wakeup Reason"
-        state: !lambda return x.c_str().split('|')[6].split("Wakeup: ")[1].c_str();
