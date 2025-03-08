@@ -4,8 +4,8 @@ esphome:
   area: $area
   project:
     name: $project_name
-    version: $project_version
-
+    version: !lambda |-
+      return "FW: " + std::string(ESPHOME_PROJECT_VERSION) + "\n" + "Built: " + std::string(App.get_compilation_time());
 logger:
   #id: logger_id
   #https://github.com/agittins/bermuda/wiki/ESPHome-Configurations
