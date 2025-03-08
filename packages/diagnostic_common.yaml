@@ -83,7 +83,7 @@ text_sensor:
   - platform: git_ref
     internal: false
     id: git_ref_id
-    name: "SW: Git Ref"
+    name: "Version: Git Ref"
     long: true
     all: true
     abbrev: 16
@@ -92,12 +92,12 @@ text_sensor:
   - platform: version
     internal: false
     id: esphome_version_id
-    name: "SW: ESP"
+    name: "Version: ESPHome"
     hide_timestamp: true
 
   # ESPHome Build Time
   - platform: template
-    name: "SW: Build Time"
+    name: "Version: Build Time"
     id: esphome_build_time
     icon: "mdi:information-box"
     entity_category: "diagnostic"
