@@ -90,6 +90,7 @@ text_sensor:
     dirty: "-dirty"
 
   - platform: version
+    internal: true
     id: esphome_version_id
     name: "ESPHome Version"
     hide_timestamp: true
