@@ -6,8 +6,10 @@ button:
 
   - platform: factory_reset
     disabled_by_default: True
-    name: "Factory Reset ESP"
+    name: "ESP32 Factory Reset"
     id: factory_reset_all
+    disabled_by_default: true
+    icon: mdi:delete
 
 # Define a switch for factory reset, used internally
 switch:
@@ -29,7 +31,7 @@ sensor:
 
   # Internal temperature of the ESP
   - platform: internal_temperature
-    name: "ESP Temperature"
+    name: "ESP32 Temperature"
     id: sys_esp_temperature
 
   # WiFi signal strength in dB
@@ -54,17 +56,17 @@ sensor:
 
   # Uptime of the device
   - platform: uptime
-    name: Uptime
+    name: ESP32 Uptime
     entity_category: "diagnostic"
 
   # Debug information about heap memory and loop time
   - platform: debug
     free:
-      name: "Heap Free"
+      name: "RAM Heap Free"
     block:
-      name: "Heap Max Block"
+      name: "RAM Heap Max Block"
     loop_time:
-      name: "Loop Time"
+      name: "ESP32 Loop Time"
 
   # Template sensor for the last update timestamp
   - platform: template
@@ -78,77 +80,36 @@ sensor:
 
 # Define text sensors for various diagnostic information
 text_sensor:
-  # Build timestamp of the firmware
-  - platform: template
-    name: "Build Timestamp"
-    id: build_timestamp
-    lambda: |-
-      return {"2025-02-27T08:02:00Z"};
-
-  # ESPHome project version (short)
-  - platform: template
-    name: "ESPHome Project Version"
-    id: esphome_project_version_text_short
-    icon: "mdi:information-box"
-    entity_category: "diagnostic"
-    update_interval: 600s
-    lambda: |-
-      return { ESPHOME_PROJECT_VERSION };
-
   # ESPHome project version (detailed)
   - platform: template
-    name: "ESPHome Project Version Detailed"
+    name: "SW Version"
     id: esphome_project_version_text_detailed
     icon: "mdi:information-box"
     entity_category: "diagnostic"
     update_interval: 600s
     lambda: |-
-      return { ESPHOME_PROJECT_VERSION " " + App.get_compilation_time() };
-
-  # ESPHome project name
-  - platform: template
-    name: "ESPHome Project Name"
-    id: esphome_project_name
-    icon: "mdi:information-box"
-    entity_category: "diagnostic"
-    update_interval: 600s
-    lambda: |-
-      return { ESPHOME_PROJECT_NAME };
-
-  # ESPHome version
-  - platform: version
-    name: "ESPHome Version"
-    id: esphome_version
-    entity_category: "diagnostic"
-    internal: False
-
-  # Copy of the ESPHome version
-  - platform: copy
-    source_id: esphome_version
-    id: esphome_version_copy
-    name: "ESPHome Version Copy"
-    internal: False
+      return { "FW: "+ ESPHOME_PROJECT_VERSION "\n" + "Built: " + App.get_compilation_time() };
 
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
     ip_address:
-      name: ESP IP Address
+      name: Network IP Address
       address_0:
-        name: ESP IP Address
+        name: Network IP Address
     ssid:
-      name: ESP Connected SSID
+      name: WiFi Connected SSID
     bssid:
-      name: ESP Connected BSSID
+      name: WiFi Connected BSSID
     mac_address:
-      name: ESP Mac Wifi Address
+      name: Network MAC
     scan_results:
-      name: ESP Latest Scan Results
+      name: WiFi SSIDs
     dns_address:
-      name: ESP DNS Address
+      name: Network DNS Address
 
   # Debug information about the device and reset reason
   - platform: debug
     device:
-      name: "Device Info"
+      name: "ESP32 Info"
     reset_reason:
-      name: "Reset Reason"
+      name: "ESP32 Reset Reason"
