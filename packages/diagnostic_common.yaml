@@ -16,7 +16,7 @@ button:
     disabled_by_default: True
     name: "ESP32 Factory Reset"
     id: factory_reset_all
-    disabled_by_default: true
+
     icon: mdi:delete
 
 # Define a switch for factory reset, used internally
