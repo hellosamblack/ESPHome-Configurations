@@ -2,13 +2,15 @@
 button:
   - platform: restart
     name: Restart
-    icon: mdi:power-cycle
+    icon: mdi:restart-alert
+    entity_category: "config"
 
   - platform: factory_reset
     disabled_by_default: True
     name: "Factory Reset"
     id: factory_reset_all
-    icon: mdi:delete
+    icon: mdi:restore-alert
+    entity_category: "config"
 
 # Define a switch for factory reset, used internally
 switch:
@@ -19,20 +21,51 @@ switch:
 # Enable debug logging with an update interval of 30 seconds
 debug:
   update_interval: 30s
-    #Break out ESP32 info into separate sensors
 
 # Define a time platform to sync with Home Assistant
 time:
   - platform: homeassistant
     id: global_time
 
+# GitHub repository monitoring component
+api:
+  services:
+    - service: check_for_updates
+      then:
+        - lambda: |-
+            id(github_last_check).publish_state(id(global_time).now().strftime("%Y-%m-%d %H:%M:%S").c_str());
+        - http_request.get:
+            url: https://api.github.com/repos/hellosamblack/esphome-configurations/commits
+            headers:
+              Accept: application/vnd.github.v3+json
+              User-Agent: ESPHome
+            on_response:
+              then:
+                - lambda: |-
+                    process_github_response(id(http_response_code).state, 
+                                           id(http_response_data).state, 
+                                           id(github_latest_commit), 
+                                           id(github_stored_commit), 
+                                           id(update_available), 
+                                           id(github_update_available));
+
+# Include GitHub monitoring helper functions
+includes:
+  - github_helpers.h
+
+# HTTP component for GitHub API requests
+http_request:
+  useragent: ESPHome
+  timeout: 10s
+
 # Define sensors for various diagnostic metrics
 sensor:
-
   # Internal temperature of the ESP
   - platform: internal_temperature
     name: "HW: Temperature"
     id: sys_esp_temperature
+    icon: mdi:thermometer
+    entity_category: "diagnostic"
 
   # WiFi signal strength in dB
   - platform: wifi_signal
@@ -42,6 +75,7 @@ sensor:
     update_interval: 60s
     entity_category: "diagnostic"
     internal: false
+    icon: mdi:wifi-strength-3
 
   # WiFi signal strength as a percentage
   - platform: copy
@@ -53,23 +87,81 @@ sensor:
     unit_of_measurement: "%"
     entity_category: "diagnostic"
     device_class: signal_strength
+    icon: mdi:wifi-strength-4
 
   # Uptime of the device
   - platform: uptime
     name: "Uptime"
     entity_category: "diagnostic"
+    icon: mdi:clock-outline
 
   # Debug information about heap memory and loop time
   - platform: debug
     free:
       name: "HW: Heap Free"
+      icon: mdi:memory
+      entity_category: "diagnostic"
     block:
       name: "HW: Heap Max Block"
+      icon: mdi:memory
+      entity_category: "diagnostic"
     loop_time:
       name: "HW: Loop Time"
+      icon: mdi:timer-outline
+      entity_category: "diagnostic"
+
+  # HTTP response code sensor for GitHub API requests
+  - platform: template
+    name: "GitHub API Response Code"
+    id: http_response_code
+    icon: mdi:api
+    entity_category: "diagnostic"
+    internal: true
+
+# Define binary sensors
+binary_sensor:
+  # Update available status
+  - platform: template
+    name: "GitHub Update Available"
+    id: update_available
+    icon: mdi:update
+    entity_category: "diagnostic"
 
 # Define text sensors for various diagnostic information
 text_sensor:
+  # GitHub monitoring sensors
+  - platform: template
+    name: "GitHub Last Check"
+    id: github_last_check
+    icon: mdi:clock-check
+    entity_category: "diagnostic"
+  
+  - platform: template
+    name: "GitHub Latest Commit"
+    id: github_latest_commit
+    icon: mdi:source-commit
+    entity_category: "diagnostic"
+  
+  - platform: template
+    name: "GitHub Stored Commit"
+    id: github_stored_commit
+    icon: mdi:source-commit-local
+    entity_category: "diagnostic"
+    internal: true
+  
+  - platform: template
+    name: "GitHub Update Available"
+    id: github_update_available
+    icon: mdi:update
+    entity_category: "diagnostic"
+  
+  # HTTP response data for GitHub API
+  - platform: template
+    name: "HTTP Response Data"
+    id: http_response_data
+    internal: true
+
+  # Version information
   - platform: git_ref
     internal: false
     id: git_ref_id
@@ -78,18 +170,20 @@ text_sensor:
     all: true
     abbrev: 16
     dirty: "-dirty"
+    icon: mdi:git
 
   - platform: version
     internal: false
     id: esphome_version_id
     name: "Version: ESPHome"
     hide_timestamp: true
+    icon: mdi:tag-text
 
   # ESPHome Build Time
   - platform: template
     name: "Version: Build Time"
     id: esphome_build_time
-    icon: "mdi:information-box"
+    icon: "mdi:calendar-clock"
     entity_category: "diagnostic"
     update_interval: 600s
     lambda: |-
@@ -101,19 +195,22 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: "Network: IP Address"
+      icon: mdi:ip-network
       address_0:
         name: "Network: IP Address"
+        icon: mdi:ip-network
     ssid:
       name: "WiFi: SSID"
+      icon: mdi:wifi
     bssid:
       name: "WiFi: BSSID"
-    #This is already visible in the device info
-    # mac_address:
-    #  name: Network MAC
+      icon: mdi:router-wireless
     scan_results:
       name: "WiFi: SSIDs"
+      icon: mdi:wifi-search
     dns_address:
       name: "Network: DNS Address"
+      icon: mdi:dns
 
   # Debug information about the device and reset reason
   - platform: debug
@@ -122,113 +219,20 @@ text_sensor:
       internal: true
       on_value:
         - lambda: |-
-            auto raw_value = x.c_str();
-            auto parts = std::vector<std::string>();
-            auto current = std::string();
-            for (int i = 0; raw_value[i] != '\0'; ++i) {
-              if (raw_value[i] == '|') {
-                parts.push_back(current);
-                current.clear();
-              } else {
-                current += raw_value[i];
-              }
-            }
-            parts.push_back(current);
-
-            if (parts.size() >= 7) {
-              id(esp32_esphome_version).publish_state(parts[0].c_str());
-
-              // Find the chip info part
-              int chip_info_index = -1;
-              for(int i = 1; i < parts.size(); i++){
-                if(parts[i].find("Chip:") != std::string::npos){
-                  chip_info_index = i;
-                  break;
-                }
-              }
-
-              if(chip_info_index != -1){
-                // Chip Model
-                auto chip_model_start = parts[chip_info_index].find("Chip: ");
-                if (chip_model_start != std::string::npos) {
-                  auto chip_model_end = parts[chip_info_index].find(" Features:", chip_model_start);
-                  if (chip_model_end != std::string::npos) {
-                    id(esp32_chip_model).publish_state(parts[chip_info_index].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
-                  }
-                }
-
-                // Chip Features
-                auto features_start = parts[chip_info_index].find("Features:");
-                if (features_start != std::string::npos) {
-                  auto features_end = parts[chip_info_index].find(" Cores:", features_start);
-                  if (features_end != std::string::npos) {
-                    auto features_str = parts[chip_info_index].substr(features_start + 9, features_end - features_start - 9);
-                    auto features = std::vector<std::string>();
-                    auto feature_current = std::string();
-                    for (int i = 0; i < features_str.length(); ++i) {
-                      if (features_str[i] == ',') {
-                        features.push_back(feature_current);
-                        feature_current.clear();
-                      } else if (features_str[i] == 'O') {
-                        break;
-                      } else {
-                        feature_current += features_str[i];
-                      }
-                    }
-                    if (!feature_current.empty()) {
-                      features.push_back(feature_current);
-                    }
-
-                    auto formatted_features = std::string();
-                    for (const auto& feature : features) {
-                      formatted_features += feature + ", ";
-                    }
-                    if (formatted_features.length() > 2) {
-                      formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
-                    }
-                    id(esp32_chip_features).publish_state(formatted_features.c_str());
-                  }
-                }
-
-                // Chip Cores
-                auto cores_start = parts[chip_info_index].find("Cores:");
-                if (cores_start != std::string::npos) {
-                  auto cores_end = parts[chip_info_index].find(" Revision:", cores_start);
-                  if (cores_end != std::string::npos) {
-                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
-                  } else {
-                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6).c_str());
-                  }
-                }
-
-                // Chip Revision
-                auto revision_start = parts[chip_info_index].find("Revision:");
-                if (revision_start != std::string::npos) {
-                  id(esp32_chip_revision).publish_state(parts[chip_info_index].substr(revision_start + 9).c_str());
-                } else {
-                    id(esp32_chip_revision).publish_state("Unknown");
-                }
-              }
-
-              //Framework
-              for(int i = 1; i < parts.size(); i++){
-                if(parts[i].find("Framework:") != std::string::npos){
-                  id(esp32_framework).publish_state(parts[i].substr(parts[i].find("Framework:")+11).c_str());
-                }
-              }
-              //ESP-IDF
-              for(int i = 1; i < parts.size(); i++){
-                if(parts[i].find("ESP-IDF:") != std::string::npos){
-                  id(esp32_esp_idf_version).publish_state(parts[i].substr(parts[i].find("ESP-IDF:")+9).c_str());
-                }
-              }
-
-              id(esp32_efuse_mac).publish_state(parts[parts.size()-3].substr(11).c_str());
-              id(esp32_reset_reason).publish_state(parts[parts.size()-2].substr(7).c_str());
-              id(esp32_wakeup_reason).publish_state(parts[parts.size()-1].substr(8).c_str());
-            }
+            process_device_info(x.c_str(), 
+                              id(esp32_esphome_version), 
+                              id(esp32_chip_model), 
+                              id(esp32_chip_features), 
+                              id(esp32_chip_cores), 
+                              id(esp32_chip_revision), 
+                              id(esp32_framework), 
+                              id(esp32_esp_idf_version), 
+                              id(esp32_efuse_mac), 
+                              id(esp32_reset_reason), 
+                              id(esp32_wakeup_reason));
     reset_reason:
       name: "Uptime: Reset Reason"
+      icon: mdi:alert-circle-outline
   - platform: template
     name: "SW: ESPHome Version"
     internal: true
@@ -270,7 +274,7 @@ text_sensor:
     name: "ESP32 EFuse MAC"
     id: esp32_efuse_mac
     entity_category: diagnostic
-    icon: mdi:ethernet-mac
+    icon: mdi:ethernet
   - platform: template
     name: "Uptime: Reset Reason"
     id: esp32_reset_reason
@@ -281,3 +285,39 @@ text_sensor:
     id: esp32_wakeup_reason
     entity_category: diagnostic
     icon: mdi:power-sleep
+
+# Add OTA component to enable updates
+ota:
+
+# Automation to check for GitHub updates periodically
+interval:
+  - interval: 1h
+    then:
+      - service: check_for_updates
+
+# Automation to notify when an update is available
+automation:
+  # Notify when ESPHome update is available
+  - alias: "Notify when ESPHome update is available"
+    trigger:
+      - platform: homeassistant
+        event: esphome.update_available
+    action:
+      - homeassistant.service:
+          service: persistent_notification.create
+          data:
+            title: "ESPHome Update Available"
+            message: "A new update is available for your ESPHome device. Please update to the latest version."
+  
+  # Notify when GitHub repository has changes
+  - alias: "Notify when GitHub repository has changes"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.github_update_available
+        to: "on"
+    action:
+      - homeassistant.service:
+          service: persistent_notification.create
+          data:
+            title: "GitHub Repository Updated"
+            message: "Changes detected in the ESPHome GitHub repository. Please update your configurations."

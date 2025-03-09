@@ -158,9 +158,10 @@ light:
             if (id(person_detected_raw).state) {
               float distance_var = id(distance).state;
               float brightness = (distance_var / 10.0) * 89.0 + 11.0; // Map distance 0-10 to brightness 11-100
-              int red = (int)(100% * (1 - (distance_var / 10.0))); // Red decreases as distance increases
-              int green = (int)(100% * (distance_var / 10.0)); // Green increases as distance increases
-              int blue = (int)(100% * (distance_var / 10.0)); // Blue increases as distance increases
+              int red = (int)(100.0 * (1 - (distance_var / 10.0)));
+              int green = (int)(100.0 * (distance_var / 10.0));
+              int blue = (int)(100.0 * (distance_var / 10.0));
+              call.set_rgb(red / 100.0, green / 100.0, blue / 100.0);
               auto call = id(led_ring).turn_on();
               call.set_brightness(brightness / 100.0);
               call.set_rgb(red / 100%.0, green / 100%.0, blue / 100%.0);
@@ -196,16 +197,14 @@ light:
           name: "Sleeping Effect On"
           update_interval: never
           lambda: |-
-            id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5s).perform();
-            delay(2000);
-            id(led_ring).turn_off().set_transition_length(5s).perform();
+          id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
+          id(led_ring).turn_off().set_transition_length(5000).perform();
       - lambda:
           name: "Sleeping Effect Off"
           update_interval: never
           lambda: |-
-            id(led_ring).turn_on().set_rgb(0.5, 0.0, 0.5).set_brightness(0.5).set_transition_length(5s).perform();
-            delay(2000);
-            id(led_ring).turn_off().set_transition_length(5s).perform();
+          id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
+          id(led_ring).turn_off().set_transition_length(5000).perform();
 
 sensor:
   - platform: bh1750
