@@ -2,14 +2,14 @@
 button:
   - platform: restart
     name: Restart
-    icon: mdi:restart-alert
+    icon: mdi:restart-alert  # More specific restart icon
     entity_category: "config"
 
   - platform: factory_reset
     disabled_by_default: True
     name: "Factory Reset"
     id: factory_reset_all
-    icon: mdi:restore-alert
+    icon: mdi:restore-alert  # More specific reset icon
     entity_category: "config"
 
 # Define a switch for factory reset, used internally
@@ -28,6 +28,7 @@ time:
     id: global_time
 
 # GitHub repository monitoring component
+# This custom component checks for changes in the specified GitHub repository
 api:
   services:
     - service: check_for_updates
@@ -42,16 +43,38 @@ api:
             on_response:
               then:
                 - lambda: |-
-                    process_github_response(id(http_response_code).state, 
-                                           id(http_response_data).state, 
-                                           id(github_latest_commit), 
-                                           id(github_stored_commit), 
-                                           id(update_available), 
-                                           id(github_update_available));
-
-# Include GitHub monitoring helper functions
-includes:
-  - github_helpers.h
+                    // Extract the latest commit SHA from the GitHub API response
+                    std::string latest_commit = "";
+                    if (id(http_response_code).state == 200) {
+                      DynamicJsonDocument doc(8192);
+                      DeserializationError err = deserializeJson(doc, id(http_response_data).state);
+                      if (!err && doc.is<JsonArray>() && doc.size() > 0) {
+                        latest_commit = doc[0]["sha"].as<std::string>();
+                        if (latest_commit.length() > 10) {
+                          latest_commit = latest_commit.substr(0, 10); // Shorten for display
+                        }
+                      }
+                    }
+                    
+                    // If there's no stored commit or the commits don't match, an update is available
+                    if (!latest_commit.empty()) {
+                      id(github_latest_commit).publish_state(latest_commit.c_str());
+                      
+                      std::string stored_commit = id(github_stored_commit).state;
+                      if (stored_commit.empty()) {
+                        // First run, store the commit but don't trigger update
+                        id(github_stored_commit).publish_state(latest_commit.c_str());
+                        id(update_available).publish_state(false);
+                      } else if (stored_commit != latest_commit) {
+                        // Different commit detected, trigger update notification
+                        id(update_available).publish_state(true);
+                        id(github_update_available).publish_state("Yes - New Commit: " + latest_commit);
+                      } else {
+                        // Same commit, no update needed
+                        id(update_available).publish_state(false);
+                        id(github_update_available).publish_state("No - Up to Date");
+                      }
+                    }
 
 # HTTP component for GitHub API requests
 http_request:
@@ -205,6 +228,9 @@ text_sensor:
     bssid:
       name: "WiFi: BSSID"
       icon: mdi:router-wireless
+    # This is already visible in the device info
+    # mac_address:
+    #  name: Network MAC
     scan_results:
       name: "WiFi: SSIDs"
       icon: mdi:wifi-search
@@ -219,17 +245,111 @@ text_sensor:
       internal: true
       on_value:
         - lambda: |-
-            process_device_info(x.c_str(), 
-                              id(esp32_esphome_version), 
-                              id(esp32_chip_model), 
-                              id(esp32_chip_features), 
-                              id(esp32_chip_cores), 
-                              id(esp32_chip_revision), 
-                              id(esp32_framework), 
-                              id(esp32_esp_idf_version), 
-                              id(esp32_efuse_mac), 
-                              id(esp32_reset_reason), 
-                              id(esp32_wakeup_reason));
+            auto raw_value = x.c_str();
+            auto parts = std::vector<std::string>();
+            auto current = std::string();
+            for (int i = 0; raw_value[i] != '\0'; ++i) {
+              if (raw_value[i] == '|') {
+                parts.push_back(current);
+                current.clear();
+              } else {
+                current += raw_value[i];
+              }
+            }
+            parts.push_back(current);
+
+            if (parts.size() >= 7) {
+              id(esp32_esphome_version).publish_state(parts[0].c_str());
+
+              // Find the chip info part
+              int chip_info_index = -1;
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("Chip:") != std::string::npos){
+                  chip_info_index = i;
+                  break;
+                }
+              }
+
+              if(chip_info_index != -1){
+                // Chip Model
+                auto chip_model_start = parts[chip_info_index].find("Chip: ");
+                if (chip_model_start != std::string::npos) {
+                  auto chip_model_end = parts[chip_info_index].find(" Features:", chip_model_start);
+                  if (chip_model_end != std::string::npos) {
+                    id(esp32_chip_model).publish_state(parts[chip_info_index].substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
+                  }
+                }
+
+                // Chip Features
+                auto features_start = parts[chip_info_index].find("Features:");
+                if (features_start != std::string::npos) {
+                  auto features_end = parts[chip_info_index].find(" Cores:", features_start);
+                  if (features_end != std::string::npos) {
+                    auto features_str = parts[chip_info_index].substr(features_start + 9, features_end - features_start - 9);
+                    auto features = std::vector<std::string>();
+                    auto feature_current = std::string();
+                    for (int i = 0; i < features_str.length(); ++i) {
+                      if (features_str[i] == ',') {
+                        features.push_back(feature_current);
+                        feature_current.clear();
+                      } else if (features_str[i] == 'O') {
+                        break;
+                      } else {
+                        feature_current += features_str[i];
+                      }
+                    }
+                    if (!feature_current.empty()) {
+                      features.push_back(feature_current);
+                    }
+
+                    auto formatted_features = std::string();
+                    for (const auto& feature : features) {
+                      formatted_features += feature + ", ";
+                    }
+                    if (formatted_features.length() > 2) {
+                      formatted_features = formatted_features.substr(0, formatted_features.length() - 2);
+                    }
+                    id(esp32_chip_features).publish_state(formatted_features.c_str());
+                  }
+                }
+
+                // Chip Cores
+                auto cores_start = parts[chip_info_index].find("Cores:");
+                if (cores_start != std::string::npos) {
+                  auto cores_end = parts[chip_info_index].find(" Revision:", cores_start);
+                  if (cores_end != std::string::npos) {
+                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6, cores_end - cores_start - 6).c_str());
+                  } else {
+                    id(esp32_chip_cores).publish_state(parts[chip_info_index].substr(cores_start + 6).c_str());
+                  }
+                }
+
+                // Chip Revision
+                auto revision_start = parts[chip_info_index].find("Revision:");
+                if (revision_start != std::string::npos) {
+                  id(esp32_chip_revision).publish_state(parts[chip_info_index].substr(revision_start + 9).c_str());
+                } else {
+                    id(esp32_chip_revision).publish_state("Unknown");
+                }
+              }
+
+              // Framework
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("Framework:") != std::string::npos){
+                  id(esp32_framework).publish_state(parts[i].substr(parts[i].find("Framework:")+11).c_str());
+                }
+              }
+              // ESP-IDF
+              for(int i = 1; i < parts.size(); i++){
+                if(parts[i].find("ESP-IDF:") != std::string::npos){
+                  id(esp32_esp_idf_version).publish_state(parts[i].substr(parts[i].find("ESP-IDF:")+9).c_str());
+                }
+              }
+
+              id(esp32_efuse_mac).publish_state(parts[parts.size()-3].substr(11).c_str());
+              id(esp32_reset_reason).publish_state(parts[parts.size()-2].substr(7).c_str());
+              id(esp32_wakeup_reason).publish_state(parts[parts.size()-1].substr(8).c_str());
+            }
     reset_reason:
       name: "Uptime: Reset Reason"
       icon: mdi:alert-circle-outline

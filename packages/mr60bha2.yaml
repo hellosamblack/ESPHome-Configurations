@@ -8,6 +8,12 @@
 
 sam_seeed_mr60bha2:
 
+#This is defined in diagnostic_common.yaml, but just to be safe
+# Add time component
+time:
+  - platform: homeassistant
+    id: global_time
+
 logger:
   logs:
       bh1750.sensor: INFO
@@ -134,7 +140,6 @@ light:
     rgb_order: GRB
     chipset: ws2812
     effects:
-      - pulse:
       - pulse:
           name: "Fast Pulse"
           transition_length: 0.5s
