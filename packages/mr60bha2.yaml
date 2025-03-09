@@ -161,10 +161,9 @@ light:
               int red = (int)(100.0 * (1 - (distance_var / 10.0)));
               int green = (int)(100.0 * (distance_var / 10.0));
               int blue = (int)(100.0 * (distance_var / 10.0));
-              call.set_rgb(red / 100.0, green / 100.0, blue / 100.0);
               auto call = id(led_ring).turn_on();
               call.set_brightness(brightness / 100.0);
-              call.set_rgb(red / 100%.0, green / 100%.0, blue / 100%.0);
+              call.set_rgb(red / 100.0, green / 100.0, blue / 100.0);
               call.perform(); 
             } else {
               id(led_ring).turn_off();
@@ -197,14 +196,14 @@ light:
           name: "Sleeping Effect On"
           update_interval: never
           lambda: |-
-          id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
-          id(led_ring).turn_off().set_transition_length(5000).perform();
+            id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
+            id(led_ring).turn_off().set_transition_length(5000).perform();
       - lambda:
           name: "Sleeping Effect Off"
           update_interval: never
           lambda: |-
-          id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
-          id(led_ring).turn_off().set_transition_length(5000).perform();
+            id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
+            id(led_ring).turn_off().set_transition_length(5000).perform();
 
 sensor:
   - platform: bh1750
