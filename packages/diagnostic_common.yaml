@@ -141,6 +141,21 @@ sensor:
     entity_category: "diagnostic"
     internal: true
 
+  - platform: homeassistant
+    id: esphome_update_status
+    entity_id: binary_sensor.esphome_update_available
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: 'return x > 0;'
+            then:
+              - homeassistant.service:
+                  service: persistent_notification.create
+                  data:
+                    title: "ESPHome Update Available"
+                    message: "A new update is available for your ESPHome device. Please update to the latest version."
+
 # Define binary sensors
 binary_sensor:
   # Update available status
@@ -149,6 +164,13 @@ binary_sensor:
     id: update_available
     icon: mdi:update
     entity_category: "diagnostic"
+    on_press:
+      then:
+        - homeassistant.service:
+            service: persistent_notification.create
+            data:
+              title: "GitHub Repository Updated"
+              message: "Changes detected in the ESPHome GitHub repository. Please update your configurations."
 
 # Define text sensors for various diagnostic information
 text_sensor:
@@ -414,30 +436,3 @@ interval:
   - interval: 1h
     then:
       - service: check_for_updates
-
-# Automation to notify when an update is available
-automation:
-  # Notify when ESPHome update is available
-  - alias: "Notify when ESPHome update is available"
-    trigger:
-      - platform: homeassistant
-        event: esphome.update_available
-    action:
-      - homeassistant.service:
-          service: persistent_notification.create
-          data:
-            title: "ESPHome Update Available"
-            message: "A new update is available for your ESPHome device. Please update to the latest version."
-  
-  # Notify when GitHub repository has changes
-  - alias: "Notify when GitHub repository has changes"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.github_update_available
-        to: "on"
-    action:
-      - homeassistant.service:
-          service: persistent_notification.create
-          data:
-            title: "GitHub Repository Updated"
-            message: "Changes detected in the ESPHome GitHub repository. Please update your configurations."
