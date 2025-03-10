@@ -254,6 +254,9 @@ text_sensor:
               id(esp32_wakeup_reason).publish_state(parts[parts.size()-1].substr(8).c_str());
             }
   - platform: template
+    name: "HW: Chip Model"
+    id: esp32_chip_model
+  - platform: template
     name: "HW: Chip Features"
     id: esp32_chip_features
     entity_category: diagnostic
