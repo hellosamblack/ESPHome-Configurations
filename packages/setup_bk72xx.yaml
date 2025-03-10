@@ -8,9 +8,9 @@ bk72xx:
 #Seems to be causing a compilation error
 #web_server:
 
-external_components:
-  source: github://hellosamblack/ESPHome-Configurations
-  components: [ wifi_csi ]
+# external_components:
+#   source: github://hellosamblack/ESPHome-Configurations
+#   components: [ wifi_csi ]
 
 wifi_csi:
   id: csi_motion
