@@ -6,11 +6,6 @@
 #     components: [ sam_seeed_mr60bha2 ]
 #     refresh: 0min
 
-# Define a constant for unknown values
-globals:
-  - id: unknown_value
-    type: std::string
-    initial_value: "Unknown"
 
 sam_seeed_mr60bha2:
 

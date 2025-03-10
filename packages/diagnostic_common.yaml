@@ -1,9 +1,3 @@
-# Define a constant for unknown values
-globals:
-  - id: unknown_value
-    type: std::string
-    initial_value: "Unknown"
-
 # Define buttons for various actions
 button:
   - platform: restart
