@@ -256,6 +256,8 @@ text_sensor:
   - platform: template
     name: "HW: Chip Model"
     id: esp32_chip_model
+    entity_category: diagnostic
+    icon: mdi:chip
   - platform: template
     name: "HW: Chip Features"
     id: esp32_chip_features
