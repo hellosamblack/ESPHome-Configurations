@@ -83,6 +83,7 @@ sensor:
       icon: mdi:timer-outline
       entity_category: "diagnostic"
 
+text_sensor:
   # Version information
   - platform: git_ref
     internal: false
@@ -94,8 +95,6 @@ sensor:
     dirty: "-dirty"
     icon: mdi:git
 
-
-text_sensor:
   - platform: version
     internal: false
     id: esphome_version_id
