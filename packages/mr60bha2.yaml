@@ -8,12 +8,6 @@
 
 sam_seeed_mr60bha2:
 
-#This is defined in diagnostic_common.yaml, but just to be safe
-# Add time component
-time:
-  - platform: homeassistant
-    id: global_time
-
 logger:
   logs:
       bh1750.sensor: INFO
@@ -179,10 +173,10 @@ light:
           lambda: |-
             for (int i = 0; i < 3; i++) {
               id(led_ring).turn_on().set_rgb(1.0, 0.0, 0.0).set_brightness(1.0).perform();
-              delay(500);
+              delay(250);
               id(led_ring).turn_off().perform();
-              delay(500);
-            }
+              delay(250);
+            } 
       - lambda:
           name: "Person Detected Flash"
           update_interval: never
@@ -200,15 +194,15 @@ light:
       - lambda:
           name: "Sleeping Effect On"
           update_interval: never
-          lambda: |-
-            id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
-            id(led_ring).turn_off().set_transition_length(5000).perform();
+          lambda: |- 
+            auto call = id(led_ring).turn_on();
+            call.set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
       - lambda:
           name: "Sleeping Effect Off"
           update_interval: never
-          lambda: |-
-            id(led_ring).turn_on().set_rgb(1.0, 1.0, 0.0).set_brightness(0.5).set_transition_length(5000).perform();
-            id(led_ring).turn_off().set_transition_length(5000).perform();
+          lambda: |- 
+            auto call = id(led_ring).turn_off();
+            call.set_transition_length(5000).perform();
 
 sensor:
   - platform: bh1750

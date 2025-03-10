@@ -28,6 +28,11 @@ ota:
 
 #web_server:
 
+# Define a time platform to sync with Home Assistant
+time:
+  - platform: homeassistant
+    id: global_time
+
 
 wifi:
   #id: wifi_id
