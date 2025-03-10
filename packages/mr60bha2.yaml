@@ -222,7 +222,9 @@ sensor:
     breath_rate:
       name: "Respiratory Rate"
       id: respiratory_rate
+      unit_of_measurement: "breath/m"
       state_class: measurement
+      icon: mdi:lungs
       filters:
         - exponential_moving_average:
             alpha: 0.1
@@ -233,7 +235,9 @@ sensor:
     heart_rate:
       name: "Heart Rate"
       id: heart_rate
+      unit_of_measurement: "bpm"
       state_class: measurement
+      icon: mdi:heart-pulse
       accuracy_decimals: 0
       filters:
         - exponential_moving_average:

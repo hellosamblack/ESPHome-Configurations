@@ -1,4 +1,3 @@
-
 # Define a constant for unknown values
 globals:
   - id: unknown_value
@@ -110,7 +109,7 @@ text_sensor:
     entity_category: "diagnostic"
     update_interval: 600s
     lambda: |-
-      return App.get_compilation_time().c_str();
+      return {App.get_compilation_time()};
 
   # WiFi information including IP address, SSID, BSSID, MAC address, scan results, and DNS address
   - platform: wifi_info
@@ -149,61 +148,61 @@ text_sensor:
     entity_category: diagnostic
     icon: mdi:chip
     lambda: |-
-      auto parts = std::vector<std::string>();
-      std::istringstream stream(x.c_str());
+      // Run this only once during setup
+      static bool initialized = false;
+      if (initialized) return {};
+
+      initialized = true;
+
+      // Parse system information
+      const auto parse_info = [](const std::string_view text, const std::string_view prefix, const std::string_view end = " ") -> std::string {
+        if (auto start = text.find(prefix); start != std::string::npos) {
+          start += prefix.length();
+          if (auto end_pos = text.find(end, start); end_pos != std::string::npos) {
+            return std::string(text.substr(start, end_pos - start));
+          }
+          return std::string(text.substr(start));
+        }
+        return "Unknown";
+      };
+
+      // Split input into parts
+      std::vector<std::string> parts;
       std::string part;
+      std::istringstream stream(x.c_str());
       while (std::getline(stream, part, '|')) {
         parts.push_back(part);
       }
+
       if (parts.size() >= 7) {
+        // Version info
         id(esp32_esphome_version).publish_state(parts[0].c_str());
 
-        auto chip_info = parts[1];
-        auto chip_model_start = chip_info.find("Chip: ");
-        auto chip_model_end = chip_info.find(" Features:");
-        if (chip_model_start != std::string::npos && chip_model_end != std::string::npos) {
-          id(esp32_chip_model).publish_state(chip_info.substr(chip_model_start + 6, chip_model_end - chip_model_start - 6).c_str());
-        }
+        // Chip info (part 1)
+        const std::string_view chip_info(parts[1]);
+        id(esp32_chip_model).publish_state(parse_info(chip_info, "Chip: ", " Features:"));
+        id(esp32_chip_features).publish_state(parse_info(chip_info, "Features:", " Cores:"));
+        id(esp32_chip_cores).publish_state(parse_info(chip_info, "Cores:", " Revision:"));
+        id(esp32_chip_revision).publish_state(parse_info(chip_info, "Revision:"));
 
-        auto features_start = chip_info.find("Features:");
-        auto features_end = chip_info.find(" Cores:");
-        if (features_start != std::string::npos && features_end != std::string::npos) {
-          id(esp32_chip_features).publish_state(chip_info.substr(features_start + 9, features_end - features_start - 9).c_str());
-        }
-
-        auto cores_start = chip_info.find("Cores:");
-        auto cores_end = chip_info.find(" Revision:");
-        if (cores_start != std::string::npos) {
-          id(esp32_chip_cores).publish_state(chip_info.substr(cores_start + 6, cores_end - cores_start - 6).c_str());
-        }
-
-        auto revision_start = chip_info.find("Revision:");
-        if (revision_start != std::string::npos) {
-          id(esp32_chip_revision).publish_state(chip_info.substr(revision_start + 9).c_str());
-        } else {
-          id(esp32_chip_revision).publish_state("Unknown");
-        }
-
-        auto extract_framework = [](const std::string& part, const std::string& key) -> std::string {
-          auto pos = part.find(key);
-          if (pos != std::string::npos) {
-            return part.substr(pos + key.length());
-          }
-          return "";
+        // Framework versions
+        const std::unordered_map<std::string, text_sensor::TextSensor*> version_sensors = {
+          {"Framework:", id(esp32_framework)},
+          {"ESP-IDF:", id(esp32_esp_idf_version)}
         };
 
         for (const auto& part : parts) {
-          if (part.find("Framework:") != std::string::npos) {
-            id(esp32_framework).publish_state(extract_framework(part, "Framework:").c_str());
-          }
-          if (part.find("ESP-IDF:") != std::string::npos) {
-            id(esp32_esp_idf_version).publish_state(extract_framework(part, "ESP-IDF:").c_str());
+          for (const auto& [prefix, sensor] : version_sensors) {
+            if (part.find(prefix) != std::string::npos) {
+              sensor->publish_state(parse_info(part, prefix));
+            }
           }
         }
 
-        id(esp32_efuse_mac).publish_state(parts[parts.size() - 3].substr(11).c_str());
-        id(esp32_reset_reason).publish_state(parts[parts.size() - 2].substr(7).c_str());
-        id(esp32_wakeup_reason).publish_state(parts[parts.size() - 1].substr(8).c_str());
+        // System info
+        id(esp32_efuse_mac).publish_state(parse_info(parts[parts.size() - 3], "Mac Address:"));
+        id(esp32_reset_reason).publish_state(parse_info(parts[parts.size() - 2], "Reset: "));
+        id(esp32_wakeup_reason).publish_state(parse_info(parts[parts.size() - 1], "Wakeup: "));
       }
 
   - platform: template
