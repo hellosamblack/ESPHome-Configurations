@@ -1,4 +1,3 @@
-
 /**
  * @brief Simple motion detection sensor that uses the WiFi signal strength
  *        signal (RSSI) to detect motions.
@@ -8,6 +7,7 @@
  */
 
 #include "wifi_csi.h"
+#include <time.h> // Include the time.h header
 
 static const char *const TAG = "wifi_csi";
 extern esphome::wifi::WiFiComponent *esphome::wifi::global_wifi_component;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
@@ -86,11 +86,11 @@ void esphome::wifi_csi::CsiSensor::update() {
         publish_state(motion);
 
         // log every 5 seconds
-        static time_t last_t;
+        static time_t last_t = 0;
         time_t now_t;
         time(&now_t);
         if (difftime(now_t, last_t) > 5.0) {
-            ESP_LOGD(TAG, "idx: %d, cnt: %d: avg: %.1f, current: %d, sensitvity: %d, motion: %d", idx, cnt, avgerageRssi, currentRssi, m_sensitivity, motion);
+            ESP_LOGD(TAG, "idx: %d, cnt: %d: avg: %.1f, current: %d, sensitvity: %d, motion: %d", idx, cnt, avgerageRssi, currentRssi, (int)m_sensitivity, motion);
             last_t = now_t;
         }
     } else {
