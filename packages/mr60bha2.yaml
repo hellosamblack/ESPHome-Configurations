@@ -213,6 +213,7 @@ sensor:
     device_class: illuminance
     id: illuminance
     state_class: measurement
+    icon: mdi:weather-sunny
     filters:
         - or: 
           - delta: 10%
@@ -222,7 +223,7 @@ sensor:
     breath_rate:
       name: "Respiratory Rate"
       id: respiratory_rate
-      unit_of_measurement: "breath/m"
+      unit_of_measurement: "bpm"
       state_class: measurement
       icon: mdi:lungs
       filters:
@@ -251,11 +252,12 @@ sensor:
       id: distance
       unit_of_measurement: ft
       accuracy_decimals: 1
+      icon: mdi:ruler
       filters:
-        - multiply: .0328084 # Convert centimeters to feet
-        - or: 
-          - delta: 10%
-          - heartbeat: 15s
+      - multiply: .0328084 # Convert centimeters to feet
+      - or: 
+        - delta: 10%
+        - heartbeat: 15s
 
     num_targets:
       name: "Number of Targets"
@@ -263,7 +265,8 @@ sensor:
       unit_of_measurement: "People"
       state_class: measurement
       accuracy_decimals: 0
+      icon: mdi:account-multiple
       filters:
-        - or: 
-          - delta: 1
-          - heartbeat: 15s
+      - or: 
+        - delta: 1
+        - heartbeat: 15s
