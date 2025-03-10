@@ -148,6 +148,9 @@ text_sensor:
     entity_category: diagnostic
     icon: mdi:chip
     lambda: |-
+      // Add include for stringstream
+      #include <sstream>
+
       // Run this only once during setup
       static bool initialized = false;
       if (initialized) return {};
@@ -163,13 +166,13 @@ text_sensor:
           }
           return std::string(text.substr(start));
         }
-        return "Unknown";
+        return id(unknown_value).state;
       };
 
       // Split input into parts
       std::vector<std::string> parts;
       std::string part;
-      std::istringstream stream(x.c_str());
+      std::istringstream stream(App.get_compilation_define("VERSION_INFO").c_str());
       while (std::getline(stream, part, '|')) {
         parts.push_back(part);
       }
@@ -203,7 +206,9 @@ text_sensor:
         id(esp32_efuse_mac).publish_state(parse_info(parts[parts.size() - 3], "Mac Address:"));
         id(esp32_reset_reason).publish_state(parse_info(parts[parts.size() - 2], "Reset: "));
         id(esp32_wakeup_reason).publish_state(parse_info(parts[parts.size() - 1], "Wakeup: "));
+        return {};
       }
+      return {};
 
   - platform: template
     name: "HW: Chip Features"
