@@ -12,15 +12,15 @@ bk72xx:
 #   source: github://hellosamblack/ESPHome-Configurations
 #   components: [ wifi_csi ]
 
-wifi_csi:
-  id: csi_motion
-  name: WiFi Motion detected
-  timing: 100ms
-  buffer_size: 100
-  hysteresis: 5
-  filters:
-    - delayed_off: 300000ms
-    - delayed_on: 500ms
+# wifi_csi:
+#   id: csi_motion
+#   name: WiFi Motion detected
+#   timing: 100ms
+#   buffer_size: 100
+#   hysteresis: 5
+#   filters:
+#     - delayed_off: 300000ms
+#     - delayed_on: 500ms
 
 binary_sensor:
 
