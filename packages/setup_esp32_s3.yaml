@@ -21,16 +21,16 @@ esp32:
       # Extend the watchdog timeout, so the device reboots if the device appears locked up for over 10 seconds.
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
 
-external_components:
-  source: github://hellosamblack/ESPHome-Configurations
-  components: [ wifi_csi ]
+# external_components:
+#   source: github://hellosamblack/ESPHome-Configurations
+#   components: [ wifi_csi ]
 
-wifi_csi:
-  id: csi_motion
-  name: WiFi Motion detected
-  timing: 100ms
-  buffer_size: 100
-  hysteresis: 5
-  filters:
-    - delayed_off: 300000ms
-    - delayed_on: 500ms
+# wifi_csi:
+#   id: csi_motion
+#   name: WiFi Motion detected
+#   timing: 100ms
+#   buffer_size: 100
+#   hysteresis: 5
+#   filters:
+#     - delayed_off: 300000ms
+#     - delayed_on: 500ms
